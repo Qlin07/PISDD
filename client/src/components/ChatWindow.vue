@@ -1,0 +1,214 @@
+<template>
+  <div class="chat">
+    <div class="chat-header">
+      <div class="title">{{ store.currentConv.display_name }}</div>
+      <div class="sub">{{ store.connected ? '在线' : '连接中...' }}</div>
+    </div>
+
+    <!-- 消息流 -->
+    <div class="chat-body" ref="bodyRef" @scroll="onScroll">
+      <div v-if="hasMore && !firstLoad" class="load-more" @click="loadMore">加载更早消息</div>
+      <div v-for="m in messages" :key="m.message_id" :id="'msg-'+m.message_id"
+        class="msg-row" :class="{mine: m.sender_id===store.user.user_id}">
+        <div class="msg-bubble">
+          <div v-if="m.sender_id!==store.user.user_id" class="m-name">{{ m.sender_nickname || '用户' }}</div>
+          <template v-if="m.type===0">{{ m.content }}</template>
+          <template v-else-if="m.type===1">
+            <img class="msg-img" v-if="m.media_url" :src="m.media_url" @click="previewImg(m.media_url)" />
+            <div v-else class="m-file">[图片] {{ m.content }}</div>
+          </template>
+          <template v-else-if="m.type===2">
+            <div class="m-file">
+              📎 <a :href="m.media_url" target="_blank" download>{{ m.content || '文件下载' }}</a>
+            </div>
+          </template>
+          <template v-else-if="m.type===4"><em class="sys">{{ m.content }}</em></template>
+          <template v-else>{{ m.content }}</template>
+          <div class="m-status" v-if="m.sender_id===store.user.user_id">
+            {{ m.status===3?'已读':m.status===2?'已送达':m.status===1?'已发送':'发送中' }}
+          </div>
+        </div>
+        <div class="m-time">{{ fmtTime(m.sent_time) }}</div>
+      </div>
+      <div v-if="firstLoad" class="empty">加载中...</div>
+    </div>
+
+    <!-- 输入区 -->
+    <div class="chat-input">
+      <div class="toolbar">
+        <label class="icon-btn" title="发送图片">
+          🖼 <input type="file" accept="image/*" style="display:none" @change="uploadImage" />
+        </label>
+        <label class="icon-btn" title="发送文件">
+          📎 <input type="file" style="display:none" @change="uploadFile" />
+        </label>
+        <span class="icon-btn" @click="toggleEmoji" title="表情">😊</span>
+        <div class="emoji-panel" v-if="emojiOpen" @click="insertEmoji">
+          <span v-for="e in emojis" :key="e">{{ e }}</span>
+        </div>
+      </div>
+      <textarea class="input-box" v-model="draft" placeholder="输入消息，Ctrl+Enter 发送"
+        @keydown.ctrl.enter="sendText" @keydown.enter.exact.prevent="sendText"></textarea>
+      <div class="send-row">
+        <span class="tip">支持 Ctrl+Enter 发送</span>
+        <button class="btn btn-primary" @click="sendText">发送</button>
+      </div>
+    </div>
+
+    <div v-if="previewUrl" class="img-preview" @click.self="previewUrl=''">
+      <img :src="previewUrl" />
+      <span class="close-x" @click="previewUrl=''">×</span>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, watch, nextTick, onMounted } from 'vue'
+import { api } from '../api/http'
+import { sendWsMessage, sendRead } from '../api/ws'
+
+const props = defineProps({ store: Object, wsConnected: Boolean })
+const store = props.store
+
+const messages = ref([])
+const draft = ref('')
+const bodyRef = ref(null)
+const emojiOpen = ref(false)
+const previewUrl = ref('')
+const firstLoad = ref(true)
+const hasMore = ref(true)
+const beforeId = ref(0)
+
+const emojis = ['😀','😃','😄','😁','😆','🤣','😊','😇','🙂','😉','😍','🤩','😘','😜','🤪','😎','🥳','😭','😢','😡','🥰','😌','🤔','🤫','😴','👍','👎','👏','🙌','🙏','💪','🎉','🔥','❤️','💙','💚','💛','⭐','🌈','🍀','🎁','🍎','☕','⚡','✨','🎈','🕶','🐱','🐶']
+
+onMounted(() => loadMessages())
+watch(() => store.currentConv?.conversation_id, () => {
+  loadMessages()
+})
+
+async function loadMessages() {
+  const cid = store.currentConv?.conversation_id
+  if (!cid) { messages.value = []; return }
+  firstLoad.value = true
+  try {
+    const data = await store.openConversation(cid, 0)
+    messages.value = data
+    beforeId.value = (data[0] && data[0].message_id) || 0
+    hasMore.value = data.length >= 50
+    await nextTick()
+    scrollBottom()
+    // 发送已读
+    sendRead(cid, messages.value.length ? messages.value[messages.value.length-1].message_id : 0)
+  } catch (e) {
+    console.warn(e)
+  } finally {
+    firstLoad.value = false
+  }
+}
+
+async function loadMore() {
+  const cid = store.currentConv?.conversation_id
+  if (!cid || !hasMore.value) return
+  const data = await store.openConversation(cid, beforeId.value)
+  if (data.length) {
+    messages.value = [...data, ...messages.value]
+    beforeId.value = data[0].message_id
+  }
+  hasMore.value = data.length >= 50
+}
+
+function sendText() {
+  const content = draft.value.trim()
+  const cid = store.currentConv?.conversation_id
+  if (!content || !cid) return
+  sendWsMessage({ conversation_id: cid, type: 0, content })
+  draft.value = ''
+  emojiOpen.value = false
+}
+
+async function uploadImage(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  const resp = await upload('/files/upload?type=image', file, 'image')
+  if (resp) {
+    sendWsMessage({ conversation_id: store.currentConv.conversation_id, type: 1, content: file.name, media_url: resp.file_url })
+  }
+  e.target.value = ''
+}
+async function uploadFile(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  const resp = await upload('/files/upload?type=file', file, 'file')
+  if (resp) {
+    sendWsMessage({ conversation_id: store.currentConv.conversation_id, type: 2, content: file.name, media_url: resp.file_url })
+  }
+  e.target.value = ''
+}
+async function upload(url, file, field) {
+  const fd = new FormData()
+  fd.append(field, file)
+  try {
+    const { data } = await api.post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return data
+  } catch (err) {
+    alert(err.message)
+    return null
+  }
+}
+
+function scrollBottom() {
+  bodyRef.value && (bodyRef.value.scrollTop = bodyRef.value.scrollHeight)
+}
+function onScroll() {
+  if (bodyRef.value && bodyRef.value.scrollTop < 10 && hasMore.value) loadMore()
+}
+function toggleEmoji() { emojiOpen.value = !emojiOpen.value }
+function insertEmoji(e) {
+  const t = e.target.textContent
+  if (t && e.target.tagName === 'SPAN') draft.value += t
+}
+function previewImg(url) { previewUrl.value = url }
+function fmtTime(t) {
+  if (!t) return ''
+  const d = new Date(t)
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+}
+</script>
+
+<style scoped>
+.chat { height:100%; display:flex; flex-direction:column; }
+.chat-header { padding:14px 18px; background:#fff; border-bottom:1px solid var(--border); }
+.title { font-size:16px; font-weight:600; }
+.sub { font-size:12px; color:var(--text-2); }
+.chat-body { flex:1; overflow:auto; padding:16px; }
+.msg-row { display:flex; flex-direction:column; margin-bottom:12px; }
+.msg-row.mine .msg-bubble { background:var(--primary); color:#fff; align-self:flex-end; }
+.msg-bubble { max-width:70%; align-self:flex-start; background:#fff; padding:9px 12px;
+  border-radius:12px; font-size:14px; line-height:1.6; word-break:break-word;
+  box-shadow:0 1px 2px rgba(0,0,0,.05); }
+.m-name { font-size:12px; color:var(--text-2); margin-bottom:4px; }
+.m-time { font-size:11px; color:#c0c0c0; margin-top:4px; align-self:flex-start; }
+.msg-row.mine .m-time { align-self:flex-end; }
+.m-status { font-size:11px; opacity:.8; text-align:right; margin-top:2px; }
+.msg-img { max-width:300px; border-radius:8px; display:block; cursor:pointer; }
+.m-file { font-size:13px; }
+.m-file a { color:var(--primary); }
+.sys { color:var(--text-2); font-size:12px; }
+.load-more { text-align:center; color:var(--primary); cursor:pointer; font-size:13px; padding:8px; }
+.chat-input { background:#fff; border-top:1px solid var(--border); padding:10px 14px; position:relative; }
+.toolbar { display:flex; gap:8px; margin-bottom:6px; }
+.icon-btn { font-size:20px; cursor:pointer; position:relative; }
+.emoji-panel { position:absolute; bottom:36px; left:0; background:#fff; border:1px solid var(--border);
+  border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.12); padding:10px; width:300px;
+  display:flex; flex-wrap:wrap; gap:4px; z-index:30; }
+.emoji-panel span { cursor:pointer; font-size:22px; }
+.input-box { width:100%; min-height:60px; max-height:150px; resize:none; border:1px solid var(--border);
+  border-radius:6px; padding:10px; font-size:14px; font-family:inherit; outline:none; }
+.input-box:focus { border-color:var(--primary); }
+.send-row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+.tip { font-size:12px; color:var(--text-2); }
+.img-preview { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center;
+  justify-content:center; z-index:100; }
+.img-preview img { max-width:92vw; max-height:92vh; }
+.close-x { position:absolute; top:16px; right:24px; color:#fff; font-size:40px; cursor:pointer; }
+</style>

@@ -1,0 +1,93 @@
+import { defineStore } from 'pinia'
+import { api } from '../api/http'
+import { setupWebSocket, closeWs } from '../api/ws'
+
+export const useStore = defineStore('app', {
+  state: () => ({
+    token: localStorage.getItem('token') || '',
+    user: JSON.parse(localStorage.getItem('user') || 'null'),
+    conversations: [],
+    contacts: [],
+    groups: [],
+    currentConv: null,
+    messages: {},
+    pendingApplies: [],
+    connected: false
+  }),
+  getters: {
+    isLogin: (s) => !!s.token
+  },
+  actions: {
+    async login(account, password, remember) {
+      const { data } = await api.post('/auth/login', { account, password, remember })
+      this.token = data.token
+      this.user = data.user
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      this.connectWs()
+    },
+    async register(account, nickname, password) {
+      const { data } = await api.post('/auth/register', { account, nickname, password })
+      this.token = data.token
+      this.user = data.user
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+      this.connectWs()
+    },
+    logout() {
+      api.post('/auth/logout').catch(() => {})
+      closeWs()
+      this.token = ''
+      this.user = null
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    },
+    connectWs() {
+      if (!this.token) return
+      setupWebSocket(
+        (message) => this.onMessage(message),
+        () => { this.connected = true },
+        () => { this.connected = false }
+      )
+    },
+    onMessage(payload) {
+      // payload: {action, data}
+      if (payload.action === 'message') {
+        const msg = payload.data
+        this.appendMessage(msg)
+      } else if (payload.action === 'conv_update') {
+        this.refreshConversations()
+      }
+    },
+    appendMessage(msg) {
+      const cid = msg.conversation_id
+      if (!this.messages[cid]) this.messages[cid] = []
+      this.messages[cid].push(msg)
+      this.refreshConversations()
+    },
+    async refreshConversations() {
+      const { data } = await api.get('/conversations')
+      this.conversations = data
+    },
+    async loadContacts() {
+      const { data } = await api.get('/contacts')
+      this.contacts = data
+    },
+    async loadGroups() {
+      const { data } = await api.get('/groups/mine')
+      this.groups = data || []
+    },
+    async loadPending() {
+      const { data } = await api.get('/contacts/pending')
+      this.pendingApplies = data || []
+    },
+    async openConversation(convId, beforeId = 0) {
+      const { data } = await api.get(`/conversations/${convId}/messages?before_id=${beforeId}&limit=50`)
+      return data
+    },
+    async ensureSingle(peerId) {
+      const { data } = await api.post('/conversations/single', { peer_id: peerId })
+      return data.conversation_id
+    }
+  }
+})

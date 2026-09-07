@@ -1,0 +1,27 @@
+# ---- Node / Client ----
+node_modules/
+client/dist/
+client/.vite/
+
+# ---- Go / Server ----
+server/*.exe
+server/*.out
+server/vendor/
+
+# ---- Data / 运行时 ----
+*.log
+*.tmp
+.env
+.env.local
+
+# ---- IDE / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Office 临时锁文件 ----
+~$*
+
+# ---- 课程资料(本地保留, 不入库) ----
+doc/

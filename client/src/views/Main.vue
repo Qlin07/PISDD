@@ -1,0 +1,221 @@
+<template>
+  <div class="main">
+    <!-- 左侧导航 -->
+    <div class="sidebar">
+      <div class="nav-items">
+        <div class="nav-item" :class="{active: tab==='chat'}" @click="tab='chat'" title="会话">💬</div>
+        <div class="nav-item" :class="{active: tab==='contacts'}" @click="tab='contacts'" title="联系人">👥</div>
+        <div class="nav-item" :class="{active: tab==='settings'}" @click="tab='settings'" title="设置">⚙️</div>
+      </div>
+      <div class="me" @click="logout" title="退出登录">{{ (store.user.nickname || '我').slice(0,1) }}</div>
+    </div>
+
+    <!-- 中间列 -->
+    <div class="mid-panel">
+      <!-- 顶部: 搜索 + tab切换 -->
+      <div class="mid-header">
+        <input class="input search-input" v-model="searchKw" placeholder="搜索" @focus="searchFocus=true" @input="onSearch" />
+        <div class="search-result" v-if="searchFocus && searchKw">
+          <div class="sr-title">联系人</div>
+          <div v-for="u in searchUsers" :key="u.user_id" class="sr-item" @click="startChat(u)">
+            <span class="sr-name">{{ u.nickname }}</span><span class="sr-acct">@{{ u.account }}</span>
+          </div>
+          <div class="sr-title">消息</div>
+          <div v-for="m in searchMsgs" :key="m.message_id" class="sr-item" @click="jumpMessage(m)">
+            <span class="sr-name">{{ m.sender_nickname }}</span>
+            <span class="sr-text">{{ m.content }}</span>
+            <span class="sr-conv">{{ m.conversation_name }}</span>
+          </div>
+          <div v-if="!searchUsers.length && !searchMsgs.length" class="empty">无结果</div>
+          <div class="sr-close" @click="searchFocus=false;searchKw=''">× 收起</div>
+        </div>
+        <div class="mid-tabs">
+          <span class="tab" :class="{active: convTab==='msg'}" @click="convTab='msg'">消息</span>
+          <span class="tab" :class="{active: convTab==='group'}" @click="convTab='group';loadGroups()">群聊</span>
+        </div>
+      </div>
+
+      <!-- 会话/群列表 -->
+      <div class="mid-list" @click="searchFocus=false">
+        <template v-if="convTab==='msg'">
+          <ConvList :conversations="store.conversations"
+            :current="store.currentConv"
+            @select="openConv" @create-group="showCreateGroup=true" />
+        </template>
+        <template v-else>
+          <GroupList :groups="store.groups" @select="openGroup" @create-group="showCreateGroup=true" />
+        </template>
+      </div>
+      <!-- 联系人tab -->
+      <div class="mid-list" v-if="tab==='contacts'">
+        <ContactList :friends="store.contacts" :pending="store.pendingApplies"
+          @chat="startChat" @refresh="refreshAll" />
+      </div>
+    </div>
+
+    <!-- 右侧内容 -->
+    <div class="right-panel">
+      <ChatWindow v-if="store.currentConv" :store="store" :wsConnected="store.connected" />
+      <div v-else class="right-empty">
+        <div class="logo-big">简聊</div>
+        <p>选择一个会话开始聊天</p>
+      </div>
+      <SettingsPanel v-if="tab==='settings' && !store.currentConv" />
+    </div>
+
+    <!-- 建群弹窗 -->
+    <CreateGroupModal v-if="showCreateGroup" :friends="store.contacts" @close="showCreateGroup=false" @created="onGroupCreated" />
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from '../store'
+import { api } from '../api/http'
+import { sendWsMessage } from '../api/ws'
+import ConvList from '../components/ConvList.vue'
+import GroupList from '../components/GroupList.vue'
+import ContactList from '../components/ContactList.vue'
+import ChatWindow from '../components/ChatWindow.vue'
+import SettingsPanel from '../components/SettingsPanel.vue'
+import CreateGroupModal from '../components/CreateGroupModal.vue'
+
+const store = useStore()
+const router = useRouter()
+
+const tab = ref('chat')
+const convTab = ref('msg')
+const showCreateGroup = ref(false)
+const searchKw = ref('')
+const searchFocus = ref(false)
+const searchUsers = ref([])
+const searchMsgs = ref([])
+
+let searchTimer = null
+
+onMounted(() => { refreshAll() })
+watch(() => store.token, (v) => { if (v) refreshAll() })
+
+function refreshAll() {
+  store.refreshConversations().catch(() => {})
+  store.loadContacts().catch(() => {})
+  store.loadGroups().catch(() => {})
+  store.loadPending().catch(() => {})
+}
+
+async function loadGroups() {
+  await store.loadGroups().catch(() => {})
+}
+
+function openConv(conv) {
+  store.currentConv = conv
+  markRead(conv)
+}
+
+async function openGroup(group) {
+  const convId = await api.get(`/groups/${group.group_id}`).then(r => r.data).catch(() => null)
+  // 群会话ID由群消息返回; 用例走消息: 直接请求会话接口定位
+  findGroupConv(group)
+}
+
+async function findGroupConv(group) {
+  // 通过历史消息兜底: 群不提供直接会话ID, 使用约定: 群会话与群ID不同.
+  // 简化: 向 /conversations 查找 type=group 且 group 匹配
+  const list = store.conversations
+  const found = list.find(c => c.group_id === group.group_id)
+  if (found) { openConv(found) }
+  else { store.ensureSingle(0) } // no-op
+}
+
+async function startChat(user) {
+  const convId = await store.ensureSingle(user.user_id).catch(() => null)
+  if (!convId) return
+  searchFocus.value = false
+  searchKw.value = ''
+  // 构造会话对象
+  const conv = {
+    conversation_id: convId,
+    type: 0,
+    display_name: user.nickname,
+    avatar: user.avatar_url,
+    peer_user_id: user.user_id
+  }
+  store.currentConv = conv
+}
+
+function markRead(conv) {
+  api.post(`/conversations/${conv.conversation_id}/read`).catch(() => {})
+}
+
+async function onSearch() {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(async () => {
+    if (!searchKw.value) { searchUsers.value = []; searchMsgs.value = []; return }
+    const kw = searchKw.value
+    try {
+      let { data: users } = await api.get(`/contacts/search?keyword=${encodeURIComponent(kw)}`)
+      searchUsers.value = users || []
+      let { data: msgs } = await api.get(`/search/messages?keyword=${encodeURIComponent(kw)}`)
+      searchMsgs.value = msgs || []
+    } catch (e) {}
+  }, 400)
+}
+
+function jumpMessage(m) {
+  // 定位到该消息所在会话
+  const conv = store.conversations.find(c => c.conversation_id === m.conversation_id)
+  if (conv) {
+    store.currentConv = conv
+    setTimeout(() => {
+      const el = document.getElementById('msg-' + m.message_id)
+      el && el.scrollIntoView({ block: 'center' })
+    }, 300)
+  }
+  searchFocus.value = false
+}
+
+function onGroupCreated(g) {
+  showCreateGroup.value = false
+  store.loadGroups()
+  store.refreshConversations()
+}
+
+function logout() {
+  store.logout()
+  router.push('/login')
+}
+</script>
+
+<style scoped>
+.main { display:flex; height:100vh; }
+.sidebar { width:64px; background:#fff; border-right:1px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; padding:12px 0; }
+.nav-items { flex:1; display:flex; flex-direction:column; gap:8px; width:100%; align-items:center; }
+.nav-item { width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+  font-size:22px; border-radius:10px; cursor:pointer; color:#666; }
+.nav-item.active { background:var(--primary); color:#fff; }
+.me { width:40px; height:40px; border-radius:50%; background:var(--primary); color:#fff;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; }
+.mid-panel { width:280px; background:#fff; border-right:1px solid var(--border); display:flex; flex-direction:column; }
+.mid-header { padding:12px; border-bottom:1px solid var(--border); position:relative; }
+.search-input { height:34px; }
+.search-result { position:absolute; top:52px; left:12px; right:12px; background:#fff;
+  border:1px solid var(--border); border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.08);
+  z-index:20; max-height:360px; overflow:auto; padding:8px; }
+.sr-title { font-size:12px; color:var(--text-2); margin:6px 4px; }
+.sr-item { display:flex; gap:8px; padding:8px; border-radius:6px; cursor:pointer; font-size:13px; }
+.sr-item:hover { background:#f5f7fa; }
+.sr-name { color:var(--primary); font-weight:600; }
+.sr-acct { color:var(--text-2); }
+.sr-text { color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; }
+.sr-conv { margin-left:auto; color:var(--text-2); font-size:12px; }
+.sr-close { text-align:center; color:var(--primary); cursor:pointer; padding:6px; font-size:13px; }
+.mid-tabs { display:flex; gap:16px; margin-top:10px; }
+.tab { font-size:14px; color:var(--text-2); cursor:pointer; padding-bottom:4px; }
+.tab.active { color:var(--primary); border-bottom:2px solid var(--primary); font-weight:600; }
+.mid-list { flex:1; overflow:auto; }
+.right-panel { flex:1; background:var(--bg); position:relative; overflow:hidden; }
+.right-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-2); }
+.logo-big { font-size:52px; color:var(--primary); margin-bottom:12px; }
+</style>
