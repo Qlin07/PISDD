@@ -83,11 +83,11 @@ async function doRegister() {
 
 <style scoped>
 .login-wrap { height:100%; display:flex; align-items:center; justify-content:center;
-  background: radial-gradient(ellipse at 30% 20%, rgba(76,201,240,.12), transparent 55%),
-             radial-gradient(ellipse at 75% 80%, rgba(42,125,158,.15), transparent 50%),
-             #0b0f16; }
+  background: radial-gradient(ellipse at 30% 20%, var(--login-aura-1), transparent 55%),
+             radial-gradient(ellipse at 75% 80%, var(--login-aura-2), transparent 50%),
+             var(--bg); }
 .login-card { width:400px; padding:40px 36px; display:flex; flex-direction:column; gap:14px;
-  background:var(--surface-2); border:1px solid var(--border-soft); box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  background:var(--surface-2); border:1px solid var(--border-soft); box-shadow:0 20px 60px var(--shadow-deep); }
 .logo { font-size:34px; color:var(--primary); text-align:center; font-weight:700;
   text-shadow:0 0 26px var(--primary-glow); letter-spacing:4px; }
 .sub { text-align:center; color:var(--text-2); margin-bottom:8px; }

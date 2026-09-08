@@ -61,7 +61,7 @@ function fmtTime(t) {
 .time { font-size:12px; color:var(--text-3); }
 .preview-row { display:flex; align-items:center; gap:6px; margin-top:2px; }
 .preview { font-size:13px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
-.unread { background:var(--danger); color:#fff; font-size:11px; border-radius:10px; padding:1px 6px; min-width:20px; text-align:center; box-shadow:0 0 8px rgba(255,107,107,.4); }
+.unread { background:var(--danger); color:#fff; font-size:11px; border-radius:10px; padding:1px 6px; min-width:20px; text-align:center; box-shadow:0 0 8px var(--danger-glow); }
 .tag { font-size:10px; color:var(--primary); border:1px solid var(--primary-dim); border-radius:4px; padding:0 3px; }
 .tag.mute { color:var(--text-3); border-color:var(--border); }
 </style>

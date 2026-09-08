@@ -1,33 +1,118 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { color-scheme: dark; }
-body { font-family: 'Microsoft YaHei', -apple-system, 'SF Pro', 'Noto Sans', sans-serif;
-  background: #0b0f16; color: #e6edf5; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-stack); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; transition: background .3s ease, color .3s ease; }
 #app { height: 100vh; }
 
+/* =========================================================
+   token 体系 · 以 data-theme 驱动, 新增主题只需在下方补充
+   ========================================================= */
+
+/* 默认主题 · 夜航 (silver-night) */
 :root {
+  --font-stack: 'Microsoft YaHei', -apple-system, 'SF Pro', 'Noto Sans', sans-serif;
+
   /* 银夜基底 · 蓝黑渐变而非纯黑 */
-  --bg: #0b0f16;          /* 页面最深 */
-  --surface: #121822;     /* 面板/侧栏 */
-  --surface-2: #171e2b;   /* 浮层/卡片 */
-  --surface-3: #1d2636;   /* 悬停/输入区 */
-  --border: #232e42;      /* 分隔线 */
+  --bg: #0b0f16;
+  --surface: #121822;
+  --surface-2: #171e2b;
+  --surface-3: #1d2636;
+  --border: #232e42;
   --border-soft: #1b2435;
-  --text: #e6edf5;        /* 主文本 */
-  --text-2: #8b97ab;      /* 次要文本 */
-  --text-3: #5c6678;      /* 弱文本 */
+  --text: #e6edf5;
+  --text-2: #8b97ab;
+  --text-3: #5c6678;
 
   /* 夜航青蓝 · 主强调色(发光) */
   --primary: #4cc9f0;
   --primary-dim: #2a7d9e;
-  --primary-ink: #04222f; /* 主色底上的深色文字 */
+  --primary-ink: #04222f;
   --primary-glow: rgba(76, 201, 240, .28);
+  --primary-hover: #6bdcff;
+
+  /* 发送气泡(自己发出) */
+  --bubble-self-bg: linear-gradient(135deg, var(--primary), var(--primary-dim));
+  --bubble-self-color: var(--primary-ink);
 
   --danger: #ff6b6b;
+  --danger-glow: rgba(255, 107, 107, .4);
   --success: #52d6a2;
   --warning: #ffd166;
+  --warning-soft: rgba(255, 209, 102, .08);
+  --warning-border: rgba(255, 209, 102, .25);
+
+  --overlay: rgba(3, 7, 14, .9);
+  --overlay-soft: rgba(3, 7, 14, .7);
+  --shadow: rgba(0, 0, 0, .5);
+  --shadow-deep: rgba(0, 0, 0, .6);
+
   --radius: 10px;
   --radius-sm: 6px;
+  --radius-lg: 14px;
+
+  /* 登录页深蓝径向氛围(可选覆盖) */
+  --login-aura-1: rgba(76, 201, 240, .12);
+  --login-aura-2: rgba(42, 125, 158, .15);
+
+  /* 滚动条 */
+  --scroll-thumb: #2a3448;
+  --scroll-thumb-hover: #35415a;
+
+  /* 悬停基底 */
+  --hover-bg: #243048;
 }
+
+/* Win11 暗色主题 · 微软蓝 Mica 毛玻璃层次 */
+:root[data-theme="win11"] {
+  --font-stack: 'Segoe UI', 'Microsoft YaHei', -apple-system, 'SF Pro', sans-serif;
+
+  /* 深灰基底(模拟 Win11 桌面壁纸渐变), Mica 面板半透明 */
+  --bg: linear-gradient(120deg, #202020, #24272c 45%, #1e2126);
+  --surface: rgba(44, 44, 48, .82);        /* Mica: 半透明灰色窗格 */
+  --surface-2: rgba(38, 40, 44, .92);       /* Acrylic 浮层 */
+  --surface-3: rgba(58, 60, 66, .9);        /* 悬停 */
+  --border: #3a3c40;
+  --border-soft: #2e3034;
+  --text: #f2f3f5;
+  --text-2: #9fa2a8;
+  --text-3: #6d7076;
+
+  /* 软粉紫强调色 */
+  --primary: #f0c0f4;
+  --primary-dim: #c78ddb;
+  --primary-ink: #3a2040;
+  --primary-glow: rgba(240, 192, 244, .30);
+  --primary-hover: #f6dcfa;
+
+  /* 发送气泡(自己发出): 灰底粉字, 底灰比页面背景略浅 */
+  --bubble-self-bg: #2b2b2b;
+  --bubble-self-color: #f0c0f4;
+
+  --danger: #f7685b;
+  --danger-glow: rgba(247, 104, 91, .4);
+  --success: #6ccc98;
+  --warning: #f2d13f;
+  --warning-soft: rgba(242, 209, 63, .09);
+  --warning-border: rgba(242, 209, 63, .28);
+
+  --overlay: rgba(16, 16, 18, .88);
+  --overlay-soft: rgba(16, 16, 18, .72);
+  --shadow: rgba(0, 0, 0, .55);
+  --shadow-deep: rgba(0, 0, 0, .65);
+
+  --radius: 8px;
+  --radius-sm: 4px;
+  --radius-lg: 10px;
+
+  --login-aura-1: rgba(76, 194, 255, .14);
+  --login-aura-2: rgba(35, 131, 215, .16);
+
+  --scroll-thumb: #3f4147;
+  --scroll-thumb-hover: #4c4f56;
+
+  --hover-bg: rgba(255, 255, 255, .06);
+}
+
+/* ========================================================= */
 
 /* 专注环 */
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
@@ -37,9 +122,9 @@ body { font-family: 'Microsoft YaHei', -apple-system, 'SF Pro', 'Noto Sans', san
   cursor:pointer; font-size:14px; border-radius:8px; padding:9px 18px;
   transition: background .18s ease, color .18s ease, box-shadow .18s ease;
   background: var(--surface-3); color: var(--text); }
-.btn:hover { background: #243048; }
+.btn:hover { background: var(--hover-bg); }
 .btn-primary { background: var(--primary); color: var(--primary-ink); font-weight:600; }
-.btn-primary:hover { background: #6bdcff; box-shadow: 0 0 0 4px var(--primary-glow); }
+.btn-primary:hover { background: var(--primary-hover); box-shadow: 0 0 0 4px var(--primary-glow); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-block { width:100%; }
 .btn-text { background:transparent; color:var(--primary); }
@@ -56,8 +141,8 @@ body { font-family: 'Microsoft YaHei', -apple-system, 'SF Pro', 'Noto Sans', san
 
 /* 通用滚动条 */
 ::-webkit-scrollbar { width:8px; height:8px; }
-::-webkit-scrollbar-thumb { background:#2a3448; border-radius:4px; }
-::-webkit-scrollbar-thumb:hover { background:#35415a; }
+::-webkit-scrollbar-thumb { background:var(--scroll-thumb); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:var(--scroll-thumb-hover); }
 ::-webkit-scrollbar-track { background: transparent; }
 
 .empty { color: var(--text-3); text-align:center; padding:40px 0; font-size:13px; }

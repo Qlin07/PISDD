@@ -55,9 +55,9 @@ async function submit() {
 
 <style scoped>
 .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; clip:rect(0,0,0,0); border:0; overflow:hidden; white-space:nowrap; }
-.modal-mask { position:fixed; inset:0; background:rgba(3,7,14,.7); backdrop-filter:blur(3px); display:flex;
+.modal-mask { position:fixed; inset:0; background:var(--overlay-soft); backdrop-filter:blur(3px); display:flex;
   align-items:center; justify-content:center; z-index:200; }
-.modal { width:420px; background:var(--surface-2); border-radius:16px; padding:22px; border:1px solid var(--border); box-shadow:0 20px 60px rgba(0,0,0,.6); }
+.modal { width:420px; background:var(--surface-2); border-radius:16px; padding:22px; border:1px solid var(--border); box-shadow:0 20px 60px var(--shadow-deep); }
 .m-title { font-size:17px; font-weight:600; margin-bottom:14px; color:var(--text); }
 .pick-title { font-size:13px; color:var(--text-2); margin:12px 0 6px; }
 .pick-list { max-height:260px; overflow:auto; border:1px solid var(--border); border-radius:10px; padding:6px; background:var(--bg); }

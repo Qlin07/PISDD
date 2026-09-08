@@ -2,6 +2,32 @@ import { defineStore } from 'pinia'
 import { api } from '../api/http'
 import { setupWebSocket, closeWs } from '../api/ws'
 
+// 可用的主题定义(易于扩展: 在此追加新主题即可)
+export const THEMES = [
+  { key: 'night', label: '夜航' },
+  { key: 'win11', label: 'Win11 暗色' }
+]
+
+const THEME_KEY = 'simplechat_theme'
+export { THEME_KEY }
+const DEFAULT_THEME = 'night'
+
+// 将主题应用到根元素 data-theme, 驱动 style.css 的变量切换
+export function applyTheme(theme) {
+  const root = document.documentElement
+  if (theme) {
+    root.setAttribute('data-theme', theme)
+  } else {
+    root.removeAttribute('data-theme')
+  }
+}
+
+export function loadTheme() {
+  const saved = localStorage.getItem(THEME_KEY)
+  const valid = THEMES.some(t => t.key === saved)
+  return valid ? saved : DEFAULT_THEME
+}
+
 export const useStore = defineStore('app', {
   state: () => ({
     token: localStorage.getItem('token') || '',
@@ -12,7 +38,8 @@ export const useStore = defineStore('app', {
     currentConv: null,
     messages: {},
     pendingApplies: [],
-    connected: false
+    connected: false,
+    theme: loadTheme()
   }),
   getters: {
     isLogin: (s) => !!s.token
@@ -49,6 +76,12 @@ export const useStore = defineStore('app', {
         () => { this.connected = true },
         () => { this.connected = false }
       )
+    },
+    setTheme(key) {
+      if (!THEMES.some(t => t.key === key)) return
+      this.theme = key
+      localStorage.setItem(THEME_KEY, key)
+      applyTheme(key)
     },
     onMessage(payload) {
       // payload: {action, data}

@@ -31,6 +31,20 @@
       </div>
     </div>
 
+    <div class="s-section">
+      <div class="s-item gap" style="flex-direction:column; align-items:stretch;">
+        <label>主题外观</label>
+        <div class="theme-picker" role="radiogroup" aria-label="选择主题">
+          <button v-for="t in THEMES" :key="t.key" type="button" class="theme-opt"
+            :class="{active: store.theme === t.key}" @click="store.setTheme(t.key)"
+            :aria-checked="store.theme === t.key" role="radio">
+            <span class="theme-swatch" :data-theme="t.key" aria-hidden="true"></span>
+            <span class="theme-label">{{ t.label }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="s-section about">
       <div class="s-item"><label>账号</label><span>{{ store.user.account }}</span></div>
       <div class="s-item"><label>UID</label><span>{{ store.user.user_id }}</span></div>
@@ -45,6 +59,7 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { api } from '../api/http'
+import { THEMES } from '../store'
 
 const props = defineProps({ store: Object })
 const store = props.store
@@ -109,5 +124,15 @@ async function changePwd() {
   display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:600; box-shadow:0 2px 10px var(--primary-glow); }
 .avatar-upload { display:flex; align-items:center; gap:10px; cursor:pointer; }
 .up-tip { color:var(--primary); font-size:13px; }
+.theme-picker { display:flex; gap:10px; flex-wrap:wrap; }
+.theme-opt { display:flex; align-items:center; gap:8px; padding:8px 14px; border:1px solid var(--border);
+  border-radius:10px; background:var(--surface-2); cursor:pointer; color:var(--text-2); transition: border-color .18s, color .18s, box-shadow .18s; }
+.theme-opt:hover { border-color:var(--primary); color:var(--text); }
+.theme-opt:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.theme-opt.active { border-color:var(--primary); color:var(--primary); box-shadow:0 0 0 3px var(--primary-glow); font-weight:600; }
+.theme-swatch { width:18px; height:18px; border-radius:50%; border:1px solid var(--border-soft); }
+/* 各主题的迷你色板(用于选择器预览) */
+.theme-swatch[data-theme="night"] { background:radial-gradient(circle at 35% 35%, #4cc9f0, #0b0f16 70%); }
+.theme-swatch[data-theme="win11"] { background:radial-gradient(circle at 35% 35%, #f0c0f4, #202020 70%); }
 .about .s-item span.ok { color:var(--success); font-weight:600; }
 </style>

@@ -223,7 +223,7 @@ function logout() {
 .mid-header { padding:12px; border-bottom:1px solid var(--border-soft); position:relative; }
 .search-input { height:34px; }
 .search-result { position:absolute; top:52px; left:12px; right:12px; background:var(--surface-2);
-  border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.5), 0 0 0 1px var(--border-soft);
+  border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px var(--shadow), 0 0 0 1px var(--border-soft);
   z-index:20; max-height:360px; overflow:auto; padding:8px; }
 .sr-title { font-size:12px; color:var(--text-2); margin:8px 4px 2px; }
 .sr-item { display:flex; gap:8px; padding:9px 8px; border-radius:8px; cursor:pointer; font-size:13px;

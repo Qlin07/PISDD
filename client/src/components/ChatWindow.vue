@@ -228,7 +228,7 @@ function fmtTime(t) {
 .chat-body { flex:1; overflow:auto; padding:18px 20px; background:var(--bg); }
 .msg-row { display:flex; flex-direction:column; margin-bottom:14px; }
 .msg-row.mine { align-items:flex-end; }
-.msg-row.mine .msg-bubble { background:linear-gradient(135deg,var(--primary),var(--primary-dim)); color:var(--primary-ink); align-self:flex-end; }
+.msg-row.mine .msg-bubble { background:var(--bubble-self-bg); color:var(--bubble-self-color); align-self:flex-end; }
 .msg-bubble { max-width:70%; align-self:flex-start; background:var(--surface-2); padding:10px 14px;
   border-radius:14px; font-size:14px; line-height:1.6; word-break:break-word; color:var(--text);
   border:1px solid var(--border-soft); }
@@ -236,7 +236,7 @@ function fmtTime(t) {
 .m-time { font-size:11px; color:var(--text-3); margin-top:4px; align-self:flex-start; }
 .msg-row.mine .m-time { align-self:flex-end; }
 .m-status { font-size:11px; opacity:.85; color:var(--text-3); text-align:right; margin-top:2px; }
-.msg-row.mine .m-status { color:var(--primary-ink); opacity:.85; }
+.msg-row.mine .m-status { color:var(--bubble-self-color); opacity:.75; }
 .msg-img { max-width:300px; border-radius:10px; display:block; cursor:pointer; border:1px solid var(--border-soft); }
 .m-file { font-size:13px; }
 .m-file a { color:var(--primary); }
@@ -253,7 +253,7 @@ function fmtTime(t) {
 .icon-btn:hover { background:var(--surface-3); color:var(--text); }
 .icon-btn:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
 .emoji-panel { position:absolute; bottom:44px; left:16px; background:var(--surface-2); border:1px solid var(--border);
-  border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.55); padding:12px; width:320px;
+  border-radius:14px; box-shadow:0 12px 30px var(--shadow-deep); padding:12px; width:320px;
   display:flex; flex-wrap:wrap; gap:4px; z-index:30; }
 .emoji-item { cursor:pointer; font-size:22px; border:none; background:transparent; padding:3px; border-radius:8px; transition: background .15s; }
 .emoji-item:hover { background:var(--surface-3); }
@@ -265,9 +265,9 @@ function fmtTime(t) {
 .input-box:focus-visible { border-color:var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
 .send-row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
 .tip { font-size:12px; color:var(--text-2); }
-.img-preview { position:fixed; inset:0; background:rgba(3,7,14,.9); backdrop-filter:blur(4px); display:flex; align-items:center;
+.img-preview { position:fixed; inset:0; background:var(--overlay); backdrop-filter:blur(4px); display:flex; align-items:center;
   justify-content:center; z-index:100; }
-.img-preview img { max-width:92vw; max-height:92vh; border-radius:10px; box-shadow:0 12px 50px rgba(0,0,0,.7); }
+.img-preview img { max-width:92vw; max-height:92vh; border-radius:10px; box-shadow:0 12px 50px var(--shadow-deep); }
 .close-x { position:absolute; top:16px; right:24px; color:#fff; font-size:38px; cursor:pointer;
   border:none; background:transparent; line-height:1; opacity:.9; }
 .close-x:hover { opacity:1; }
