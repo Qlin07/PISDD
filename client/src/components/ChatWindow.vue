@@ -44,10 +44,23 @@
         <label class="icon-btn" aria-label="发送文件" title="发送文件">
           📎 <input type="file" style="display:none" @change="uploadFile" />
         </label>
-        <button class="icon-btn" @click="toggleEmoji" aria-label="表情" title="表情" type="button">😊</button>
-        <div class="emoji-panel" v-if="emojiOpen" role="menu" aria-label="选择表情">
-          <button v-for="e in emojis" :key="e" class="emoji-item" @click="insertEmoji(e)" type="button">{{ e }}</button>
+        <div class="emoji-wrap">
+        <button ref="emojiBtn" class="icon-btn" @click="toggleEmoji" aria-label="表情" aria-haspopup="true" :aria-expanded="emojiOpen ? 'true':'false'" title="表情" type="button">😊</button>
+        <div ref="emojiPanel" class="emoji-panel" v-if="emojiOpen" role="menu" aria-label="选择表情">
+          <div class="emoji-viewport">
+            <div class="emoji-track" :style="{ transform: 'translateX(' + (0 - emojiPage * EMOJI_VIEWPORT_W) + 'px)' }">
+              <div v-for="(page, pi) in emojiPages" :key="pi" class="emoji-page" role="presentation">
+                <button v-for="e in page" :key="e" class="emoji-item" @click="insertEmoji(e)" type="button" role="menuitem">{{ e }}</button>
+              </div>
+            </div>
+          </div>
+          <div v-if="emojiPages.length > 1" class="emoji-dots" role="tablist" aria-label="表情翻页">
+            <button v-for="(p, pi) in emojiPages" :key="pi" class="emoji-dot"
+              :class="{active: pi === emojiPage}" @click="emojiPage = pi" type="button" role="tab"
+              :aria-label="'第' + (pi + 1) + '页'" :aria-selected="pi === emojiPage ? 'true' : 'false'"></button>
+          </div>
         </div>
+      </div>
       </div>
       <textarea class="input-box" v-model="draft" placeholder="输入消息，Ctrl+Enter 发送" aria-label="消息内容"
         @keydown.ctrl.enter="sendText" @keydown.enter.exact.prevent="sendText" spellcheck="false"></textarea>
@@ -65,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
 import { api } from '../api/http'
 import { sendWsMessage, sendRead } from '../api/ws'
 
@@ -84,6 +97,25 @@ const beforeId = ref(0)
 
 const messages = ref([])
 const emojis = ['😀','😃','😄','😁','😆','🤣','😊','😇','🙂','😉','😍','🤩','😘','😜','🤪','😎','🥳','😭','😢','😡','🥰','😌','🤔','🤫','😴','👍','👎','👏','🙌','🙏','💪','🎉','🔥','❤️','💙','💚','💛','⭐','🌈','🍀','🎁','🍎','☕','⚡','✨','🎈','🕶','🐱','🐶']
+
+// 表情面板: 每页最多 4 行, 每行 8 个 → 每页 32 个; 视口宽度(与 .emoji-viewport 一致)
+const EMOJI_COLS = 8
+const EMOJI_ROWS = 4
+const PAGESIZE = EMOJI_COLS * EMOJI_ROWS
+const EMOJI_VIEWPORT_W = 276
+const emojiPage = ref(0)
+// 将 emojis 切分为若干页
+const emojiPages = computed(() => {
+  const pages = []
+  for (let i = 0; i < emojis.length; i += PAGESIZE) {
+    pages.push(emojis.slice(i, i + PAGESIZE))
+  }
+  return pages
+})
+
+// 表情面板点击外部关闭所需 ref
+const emojiBtn = ref(null)
+const emojiPanel = ref(null)
 
 // 当前会话消息
 const cid = () => store.currentConv?.conversation_id
@@ -208,11 +240,28 @@ function scrollBottom() {
 function onScroll() {
   if (bodyRef.value && bodyRef.value.scrollTop < 10 && hasMore.value) loadMore()
 }
-function toggleEmoji() { emojiOpen.value = !emojiOpen.value }
+function toggleEmoji() { 
+  emojiOpen.value = !emojiOpen.value
+  emojiPage.value = 0
+}
 function insertEmoji(e) {
   draft.value += e
+  // 选择表情后保留面板(便于连续插入), 通过点击外部关闭
 }
 function previewImg(url) { previewUrl.value = url }
+
+// 点击面板外区域时关闭表情面板; 点击面板本身(选择/翻页)不关闭
+function onDocPointerDown(ev) {
+  if (!emojiOpen.value) return
+  const panel = emojiPanel.value
+  const btn = emojiBtn.value
+  const inPanel = panel && panel.contains(ev.target)
+  const inBtn = btn && btn.contains(ev.target)
+  if (!inPanel && !inBtn) emojiOpen.value = false
+}
+
+onMounted(() => document.addEventListener('pointerdown', onDocPointerDown, true))
+onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocPointerDown, true))
 function fmtTime(t) {
   if (!t) return ''
   const d = new Date(t)
@@ -247,17 +296,30 @@ function fmtTime(t) {
 .load-more:hover { background:var(--surface-3); }
 .load-more:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
 .chat-input { background:var(--surface); border-top:1px solid var(--border-soft); padding:12px 16px; position:relative; }
-.toolbar { display:flex; gap:6px; margin-bottom:8px; align-items:center; }
+.toolbar { position:relative; display:flex; gap:6px; margin-bottom:8px; align-items:center; }
+.emoji-wrap { position:relative; display:inline-flex; }
 .icon-btn { font-size:20px; cursor:pointer; position:relative; border:none; background:transparent;
   padding:4px; border-radius:8px; color:var(--text-2); transition: background .15s, color .15s; }
 .icon-btn:hover { background:var(--surface-3); color:var(--text); }
 .icon-btn:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
-.emoji-panel { position:absolute; bottom:44px; left:16px; background:var(--surface-2); border:1px solid var(--border);
-  border-radius:14px; box-shadow:0 12px 30px var(--shadow-deep); padding:12px; width:320px;
-  display:flex; flex-wrap:wrap; gap:4px; z-index:30; }
-.emoji-item { cursor:pointer; font-size:22px; border:none; background:transparent; padding:3px; border-radius:8px; transition: background .15s; }
+.emoji-panel { position:absolute; left:100%; bottom:calc(100% + 6px); margin-left:2px; transform-origin: bottom left; background:var(--surface-2);
+  border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 40px var(--shadow-deep); padding:10px 12px 6px;
+  width:300px; z-index:40; overscroll-behavior: contain; animation: emojiPop .16s ease; }
+@keyframes emojiPop { from { opacity:0; transform: translateY(6px) scale(.97); } to { opacity:1; transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .emoji-panel { animation: none; } .emoji-track { transition: none; } }
+.emoji-viewport { width: 276px; overflow: hidden; }
+.emoji-track { display:flex; transition: transform .18s ease; will-change: transform; }
+.emoji-page { display:grid; grid-template-columns: repeat(8, 1fr); gap:2px; flex:0 0 276px; width:276px; }
+.emoji-item { cursor:pointer; font-size:22px; border:none; background:transparent; padding:4px 0;
+  border-radius:8px; transition: background .15s; display:flex; align-items:center; justify-content:center; line-height:1; }
 .emoji-item:hover { background:var(--surface-3); }
 .emoji-item:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.emoji-dots { display:flex; justify-content:center; gap:6px; margin-top:8px; padding-bottom:2px; }
+.emoji-dot { width:6px; height:6px; border-radius:50%; border:none; cursor:pointer; padding:0;
+  background:var(--text-3); opacity:.5; transition: background .15s, opacity .15s; }
+.emoji-dot:hover { opacity:1; }
+.emoji-dot.active { background:var(--primary); opacity:1; }
+.emoji-dot:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
 .input-box { width:100%; min-height:60px; max-height:150px; resize:none; border:1px solid var(--border);
   border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; outline:none; color:var(--text);
   background:var(--surface-2); transition: border-color .18s, box-shadow .18s; }
