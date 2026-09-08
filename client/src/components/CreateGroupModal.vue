@@ -55,20 +55,20 @@ async function submit() {
 
 <style scoped>
 .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; clip:rect(0,0,0,0); border:0; overflow:hidden; white-space:nowrap; }
-.modal-mask { position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex;
+.modal-mask { position:fixed; inset:0; background:rgba(3,7,14,.7); backdrop-filter:blur(3px); display:flex;
   align-items:center; justify-content:center; z-index:200; }
-.modal { width:420px; background:#fff; border-radius:12px; padding:20px; }
-.m-title { font-size:17px; font-weight:600; margin-bottom:14px; }
+.modal { width:420px; background:var(--surface-2); border-radius:16px; padding:22px; border:1px solid var(--border); box-shadow:0 20px 60px rgba(0,0,0,.6); }
+.m-title { font-size:17px; font-weight:600; margin-bottom:14px; color:var(--text); }
 .pick-title { font-size:13px; color:var(--text-2); margin:12px 0 6px; }
-.pick-list { max-height:260px; overflow:auto; border:1px solid var(--border); border-radius:8px; padding:6px; }
-.pick-item { display:flex; align-items:center; gap:10px; padding:8px; cursor:pointer; border-radius:6px;
-  width:100%; text-align:left; border:none; background:transparent; font:inherit; color:inherit; }
-.pick-item:hover { background:#f5f7fa; }
+.pick-list { max-height:260px; overflow:auto; border:1px solid var(--border); border-radius:10px; padding:6px; background:var(--bg); }
+.pick-item { display:flex; align-items:center; gap:10px; padding:8px; cursor:pointer; border-radius:8px;
+  width:100%; text-align:left; border:none; background:transparent; font:inherit; color:inherit; transition: background .15s; }
+.pick-item:hover { background:var(--surface-3); }
 .pick-item:focus-visible { outline:2px solid var(--primary); outline-offset:-1px; }
-.pick-item.checked { background:#eef6ff; }
-.avatar { width:34px; height:34px; border-radius:50%; background:var(--primary); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
-.f-name { flex:1; font-size:14px; }
+.pick-item.checked { background:var(--surface-3); box-shadow: inset 3px 0 0 var(--primary); }
+.avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-dim)); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; font-weight:600; }
+.f-name { flex:1; font-size:14px; color:var(--text); }
 .check { width:20px; text-align:center; color:var(--primary); font-weight:700; }
 .m-ops { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
 </style>

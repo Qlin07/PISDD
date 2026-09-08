@@ -97,16 +97,17 @@ async function changePwd() {
 </script>
 
 <style scoped>
-.settings { padding:20px; max-width:420px; }
-.s-title { font-size:18px; font-weight:600; margin-bottom:16px; }
-.s-section { background:#fff; border-radius:8px; padding:16px; margin-bottom:12px;
+.settings { padding:20px; max-width:440px; }
+.s-title { font-size:18px; font-weight:600; margin-bottom:16px; color:var(--text); }
+.s-section { background:var(--surface); border:1px solid var(--border-soft); border-radius:14px; padding:16px; margin-bottom:12px;
   display:flex; flex-direction:column; gap:10px; }
 .s-item { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.s-item label { font-size:14px; color:#555; min-width:70px; }
+.s-item label { font-size:14px; color:var(--text-2); min-width:70px; }
 .s-item .input { flex:1; }
-.avatar { width:48px; height:48px; border-radius:50%; background:var(--primary); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:18px; }
+.s-item > span:last-child { color:var(--text); }
+.avatar { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-dim)); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:600; box-shadow:0 2px 10px var(--primary-glow); }
 .avatar-upload { display:flex; align-items:center; gap:10px; cursor:pointer; }
 .up-tip { color:var(--primary); font-size:13px; }
-.about .s-item span.ok { color:#2aa94f; font-weight:600; }
+.about .s-item span.ok { color:var(--success); font-weight:600; }
 </style>

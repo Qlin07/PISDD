@@ -23,14 +23,14 @@ function avatarStyle(url) { return { background: url ? `url(${url}) center/cover
 
 <style scoped>
 .conv-item { display:flex; align-items:center; gap:10px; padding:12px; cursor:pointer;
-  width:100%; text-align:left; border:none; background:transparent; font:inherit; color:inherit; }
-.conv-item:hover { background:#f5f7fa; }
-.conv-item:focus-visible { outline:2px solid var(--primary); outline-offset:-2px; background:#f0f6ff; }
-.conv-item.add:hover { background:#f0f6ff; }
-.avatar { width:44px; height:44px; border-radius:50%; background:var(--primary); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:16px; }
-.avatar.plus { background:#eef3ff; color:var(--primary); }
+  width:100%; text-align:left; border:none; background:transparent; font:inherit; color:inherit; transition: background .15s; border-radius:8px; }
+.conv-item:hover { background:var(--surface-3); }
+.conv-item:focus-visible { outline:2px solid var(--primary); outline-offset:-2px; background:var(--surface-3); }
+.conv-item.add:hover { background:var(--surface-3); }
+.avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-dim)); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; box-shadow:0 2px 8px var(--primary-glow); }
+.avatar.plus { background:var(--surface-3); color:var(--primary); box-shadow:none; }
 .conv-info { flex:1; min-width:0; }
-.name { font-size:15px; font-weight:500; }
+.name { font-size:15px; font-weight:500; color:var(--text); }
 .preview { font-size:13px; color:var(--text-2); }
 </style>

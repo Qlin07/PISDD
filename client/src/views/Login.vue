@@ -83,12 +83,18 @@ async function doRegister() {
 
 <style scoped>
 .login-wrap { height:100%; display:flex; align-items:center; justify-content:center;
-  background:linear-gradient(135deg,#e8f1ff,#f2f2f2); }
-.login-card { width:400px; padding:40px 36px; display:flex; flex-direction:column; gap:14px; }
-.logo { font-size:34px; color:var(--primary); text-align:center; }
+  background: radial-gradient(ellipse at 30% 20%, rgba(76,201,240,.12), transparent 55%),
+             radial-gradient(ellipse at 75% 80%, rgba(42,125,158,.15), transparent 50%),
+             #0b0f16; }
+.login-card { width:400px; padding:40px 36px; display:flex; flex-direction:column; gap:14px;
+  background:var(--surface-2); border:1px solid var(--border-soft); box-shadow:0 20px 60px rgba(0,0,0,.5); }
+.logo { font-size:34px; color:var(--primary); text-align:center; font-weight:700;
+  text-shadow:0 0 26px var(--primary-glow); letter-spacing:4px; }
 .sub { text-align:center; color:var(--text-2); margin-bottom:8px; }
-.remember { font-size:13px; color:var(--text-2); display:flex; align-items:center; gap:6px; }
+.remember { font-size:13px; color:var(--text-2); display:flex; align-items:center; gap:6px; cursor:pointer; }
+.remember input { accent-color: var(--primary); }
 .switch-links { display:flex; justify-content:space-between; font-size:13px; }
 .switch-links a { color:var(--primary); cursor:pointer; }
+.switch-links a:hover { text-decoration:underline; }
 .error { color:var(--danger); font-size:13px; text-align:center; }
 </style>

@@ -1,38 +1,63 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Microsoft YaHei', -apple-system, 'SF Pro', 'Noto Sans', sans-serif; background: #f2f2f2; color: #1c1c1c; }
+html { color-scheme: dark; }
+body { font-family: 'Microsoft YaHei', -apple-system, 'SF Pro', 'Noto Sans', sans-serif;
+  background: #0b0f16; color: #e6edf5; -webkit-font-smoothing: antialiased; }
 #app { height: 100vh; }
 
 :root {
-  --primary: #2b7fff;
-  --bg: #f2f2f2;
-  --card: #ffffff;
-  --border: #e5e5e5;
-  --text: #1c1c1c;
-  --text-2: #888;
-  --danger: #e5484d;
-  --radius: 8px;
+  /* 银夜基底 · 蓝黑渐变而非纯黑 */
+  --bg: #0b0f16;          /* 页面最深 */
+  --surface: #121822;     /* 面板/侧栏 */
+  --surface-2: #171e2b;   /* 浮层/卡片 */
+  --surface-3: #1d2636;   /* 悬停/输入区 */
+  --border: #232e42;      /* 分隔线 */
+  --border-soft: #1b2435;
+  --text: #e6edf5;        /* 主文本 */
+  --text-2: #8b97ab;      /* 次要文本 */
+  --text-3: #5c6678;      /* 弱文本 */
+
+  /* 夜航青蓝 · 主强调色(发光) */
+  --primary: #4cc9f0;
+  --primary-dim: #2a7d9e;
+  --primary-ink: #04222f; /* 主色底上的深色文字 */
+  --primary-glow: rgba(76, 201, 240, .28);
+
+  --danger: #ff6b6b;
+  --success: #52d6a2;
+  --warning: #ffd166;
+  --radius: 10px;
+  --radius-sm: 6px;
 }
+
+/* 专注环 */
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* 按钮 */
 .btn { display:inline-flex; align-items:center; justify-content:center; border:none;
-  cursor:pointer; font-size:14px; border-radius:4px; padding:8px 16px;
-  transition: opacity .15s, background .15s; }
-.btn-primary { background: var(--primary); color:#fff; }
-.btn-primary:hover { opacity:.9; }
+  cursor:pointer; font-size:14px; border-radius:8px; padding:9px 18px;
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+  background: var(--surface-3); color: var(--text); }
+.btn:hover { background: #243048; }
+.btn-primary { background: var(--primary); color: var(--primary-ink); font-weight:600; }
+.btn-primary:hover { background: #6bdcff; box-shadow: 0 0 0 4px var(--primary-glow); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-block { width:100%; }
 .btn-text { background:transparent; color:var(--primary); }
+.btn-text:hover { background: var(--primary-glow); }
 
 /* 输入框 */
-.input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:4px;
-  font-size:14px; outline:none; background:#fff; }
-.input:focus { border-color: var(--primary); }
+.input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+  font-size:14px; outline:none; background: var(--surface-2); color: var(--text); transition: border-color .18s, box-shadow .18s; }
+.input::placeholder { color: var(--text-3); }
+.input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
 
 /* 卡片 */
-.card { background: var(--card); border-radius: var(--radius); }
+.card { background: var(--surface-2); border-radius: var(--radius); border: 1px solid var(--border-soft); }
 
 /* 通用滚动条 */
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-thumb { background:#ccc; border-radius:3px; }
-::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar { width:8px; height:8px; }
+::-webkit-scrollbar-thumb { background:#2a3448; border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:#35415a; }
+::-webkit-scrollbar-track { background: transparent; }
 
-.empty { color: var(--text-2); text-align:center; padding:40px 0; font-size:13px; }
+.empty { color: var(--text-3); text-align:center; padding:40px 0; font-size:13px; }

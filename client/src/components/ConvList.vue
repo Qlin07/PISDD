@@ -46,21 +46,22 @@ function fmtTime(t) {
 
 <style scoped>
 .conv-item { display:flex; align-items:center; gap:10px; padding:12px; cursor:pointer;
-  width:100%; text-align:left; border:none; background:transparent; font:inherit; color:inherit; }
-.conv-item:hover { background:#f5f7fa; }
-.conv-item:focus-visible { outline:2px solid var(--primary); outline-offset:-2px; background:#f0f6ff; }
-.conv-item.active { background:#e7f0ff; }
-.conv-item.add:hover { background:#f0f6ff; }
-.avatar { width:44px; height:44px; border-radius:50%; background:var(--primary);
-  color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
-.avatar.plus { background:#eef3ff; color:var(--primary); }
+  width:100%; text-align:left; border:none; background:transparent; font:inherit; color:inherit;
+  transition: background .15s; border-radius:8px; }
+.conv-item:hover { background:var(--surface-3); }
+.conv-item:focus-visible { outline:2px solid var(--primary); outline-offset:-2px; background:var(--surface-3); }
+.conv-item.active { background:var(--surface-2); box-shadow: inset 3px 0 0 var(--primary); }
+.conv-item.add:hover { background:var(--surface-3); }
+.avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-dim));
+  color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; font-weight:600; box-shadow: 0 2px 8px var(--primary-glow); }
+.avatar.plus { background:var(--surface-3); color:var(--primary); box-shadow:none; }
 .conv-info { flex:1; min-width:0; }
 .name-row { display:flex; justify-content:space-between; align-items:center; }
-.name { font-size:15px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.time { font-size:12px; color:var(--text-2); }
+.name { font-size:15px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text); }
+.time { font-size:12px; color:var(--text-3); }
 .preview-row { display:flex; align-items:center; gap:6px; margin-top:2px; }
 .preview { font-size:13px; color:var(--text-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
-.unread { background:var(--danger); color:#fff; font-size:11px; border-radius:10px; padding:1px 6px; min-width:20px; text-align:center; }
-.tag { font-size:10px; color:var(--primary); border:1px solid var(--primary); border-radius:4px; padding:0 3px; }
-.tag.mute { color:var(--text-2); border-color:var(--border); }
+.unread { background:var(--danger); color:#fff; font-size:11px; border-radius:10px; padding:1px 6px; min-width:20px; text-align:center; box-shadow:0 0 8px rgba(255,107,107,.4); }
+.tag { font-size:10px; color:var(--primary); border:1px solid var(--primary-dim); border-radius:4px; padding:0 3px; }
+.tag.mute { color:var(--text-3); border-color:var(--border); }
 </style>

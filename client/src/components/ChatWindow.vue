@@ -222,47 +222,54 @@ function fmtTime(t) {
 
 <style scoped>
 .chat { height:100%; display:flex; flex-direction:column; }
-.chat-header { padding:14px 18px; background:#fff; border-bottom:1px solid var(--border); }
-.title { font-size:16px; font-weight:600; }
+.chat-header { padding:14px 18px; background:var(--surface); border-bottom:1px solid var(--border-soft); }
+.title { font-size:16px; font-weight:600; color:var(--text); }
 .sub { font-size:12px; color:var(--text-2); }
-.chat-body { flex:1; overflow:auto; padding:16px; }
-.msg-row { display:flex; flex-direction:column; margin-bottom:12px; }
-.msg-row.mine .msg-bubble { background:var(--primary); color:#fff; align-self:flex-end; }
-.msg-bubble { max-width:70%; align-self:flex-start; background:#fff; padding:9px 12px;
-  border-radius:12px; font-size:14px; line-height:1.6; word-break:break-word;
-  box-shadow:0 1px 2px rgba(0,0,0,.05); }
-.m-name { font-size:12px; color:var(--text-2); margin-bottom:4px; }
-.m-time { font-size:11px; color:#c0c0c0; margin-top:4px; align-self:flex-start; }
+.chat-body { flex:1; overflow:auto; padding:18px 20px; background:var(--bg); }
+.msg-row { display:flex; flex-direction:column; margin-bottom:14px; }
+.msg-row.mine { align-items:flex-end; }
+.msg-row.mine .msg-bubble { background:linear-gradient(135deg,var(--primary),var(--primary-dim)); color:var(--primary-ink); align-self:flex-end; }
+.msg-bubble { max-width:70%; align-self:flex-start; background:var(--surface-2); padding:10px 14px;
+  border-radius:14px; font-size:14px; line-height:1.6; word-break:break-word; color:var(--text);
+  border:1px solid var(--border-soft); }
+.m-name { font-size:12px; color:var(--primary); margin-bottom:4px; font-weight:600; }
+.m-time { font-size:11px; color:var(--text-3); margin-top:4px; align-self:flex-start; }
 .msg-row.mine .m-time { align-self:flex-end; }
-.m-status { font-size:11px; opacity:.8; text-align:right; margin-top:2px; }
-.msg-img { max-width:300px; border-radius:8px; display:block; cursor:pointer; }
+.m-status { font-size:11px; opacity:.85; color:var(--text-3); text-align:right; margin-top:2px; }
+.msg-row.mine .m-status { color:var(--primary-ink); opacity:.85; }
+.msg-img { max-width:300px; border-radius:10px; display:block; cursor:pointer; border:1px solid var(--border-soft); }
 .m-file { font-size:13px; }
 .m-file a { color:var(--primary); }
 .sys { color:var(--text-2); font-size:12px; }
 .load-wrap { text-align:center; padding:4px; }
 .load-more { border:none; background:transparent; color:var(--primary); cursor:pointer;
-  font-size:13px; padding:8px 16px; border-radius:6px; }
-.load-more:hover { background:#f0f4ff; }
+  font-size:13px; padding:8px 16px; border-radius:8px; }
+.load-more:hover { background:var(--surface-3); }
 .load-more:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
-.chat-input { background:#fff; border-top:1px solid var(--border); padding:10px 14px; position:relative; }
-.toolbar { display:flex; gap:8px; margin-bottom:6px; align-items:center; }
-.icon-btn { font-size:20px; cursor:pointer; position:relative; border:none; background:transparent; padding:2px; border-radius:6px; }
+.chat-input { background:var(--surface); border-top:1px solid var(--border-soft); padding:12px 16px; position:relative; }
+.toolbar { display:flex; gap:6px; margin-bottom:8px; align-items:center; }
+.icon-btn { font-size:20px; cursor:pointer; position:relative; border:none; background:transparent;
+  padding:4px; border-radius:8px; color:var(--text-2); transition: background .15s, color .15s; }
+.icon-btn:hover { background:var(--surface-3); color:var(--text); }
 .icon-btn:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
-.emoji-panel { position:absolute; bottom:36px; left:0; background:#fff; border:1px solid var(--border);
-  border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.12); padding:10px; width:300px;
+.emoji-panel { position:absolute; bottom:44px; left:16px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.55); padding:12px; width:320px;
   display:flex; flex-wrap:wrap; gap:4px; z-index:30; }
-.emoji-item { cursor:pointer; font-size:22px; border:none; background:transparent; padding:2px; border-radius:6px; }
-.emoji-item:hover { background:#f0f4ff; }
+.emoji-item { cursor:pointer; font-size:22px; border:none; background:transparent; padding:3px; border-radius:8px; transition: background .15s; }
+.emoji-item:hover { background:var(--surface-3); }
 .emoji-item:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
 .input-box { width:100%; min-height:60px; max-height:150px; resize:none; border:1px solid var(--border);
-  border-radius:6px; padding:10px; font-size:14px; font-family:inherit; outline:none; }
-.input-box:focus-visible { border-color:var(--primary); }
+  border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; outline:none; color:var(--text);
+  background:var(--surface-2); transition: border-color .18s, box-shadow .18s; }
+.input-box::placeholder { color:var(--text-3); }
+.input-box:focus-visible { border-color:var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
 .send-row { display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
 .tip { font-size:12px; color:var(--text-2); }
-.img-preview { position:fixed; inset:0; background:rgba(0,0,0,.85); display:flex; align-items:center;
+.img-preview { position:fixed; inset:0; background:rgba(3,7,14,.9); backdrop-filter:blur(4px); display:flex; align-items:center;
   justify-content:center; z-index:100; }
-.img-preview img { max-width:92vw; max-height:92vh; border-radius:8px; }
-.close-x { position:absolute; top:16px; right:24px; color:#fff; font-size:40px; cursor:pointer;
-  border:none; background:transparent; line-height:1; }
+.img-preview img { max-width:92vw; max-height:92vh; border-radius:10px; box-shadow:0 12px 50px rgba(0,0,0,.7); }
+.close-x { position:absolute; top:16px; right:24px; color:#fff; font-size:38px; cursor:pointer;
+  border:none; background:transparent; line-height:1; opacity:.9; }
+.close-x:hover { opacity:1; }
 .close-x:focus-visible { outline:2px solid #fff; outline-offset:2px; }
 </style>
