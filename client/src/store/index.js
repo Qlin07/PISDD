@@ -62,7 +62,10 @@ export const useStore = defineStore('app', {
     appendMessage(msg) {
       const cid = msg.conversation_id
       if (!this.messages[cid]) this.messages[cid] = []
-      this.messages[cid].push(msg)
+      // 去重: 避免乐观插入与 WS 回显重复
+      if (!this.messages[cid].some(m => m.message_id === msg.message_id)) {
+        this.messages[cid].push(msg)
+      }
       this.refreshConversations()
     },
     async refreshConversations() {
@@ -83,6 +86,12 @@ export const useStore = defineStore('app', {
     },
     async openConversation(convId, beforeId = 0) {
       const { data } = await api.get(`/conversations/${convId}/messages?before_id=${beforeId}&limit=50`)
+      // 统一消息源: 首次加载覆盖, 分页加载前置插入; 实时消息经 appendMessage 合并
+      if (beforeId === 0) {
+        this.messages[convId] = data
+      } else {
+        this.messages[convId] = [...data, ...(this.messages[convId] || [])]
+      }
       return data
     },
     async ensureSingle(peerId) {

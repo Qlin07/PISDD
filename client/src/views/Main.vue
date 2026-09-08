@@ -3,35 +3,35 @@
     <!-- 左侧导航 -->
     <div class="sidebar">
       <div class="nav-items">
-        <div class="nav-item" :class="{active: tab==='chat'}" @click="tab='chat'" title="会话">💬</div>
-        <div class="nav-item" :class="{active: tab==='contacts'}" @click="tab='contacts'" title="联系人">👥</div>
-        <div class="nav-item" :class="{active: tab==='settings'}" @click="tab='settings'" title="设置">⚙️</div>
+        <button class="nav-item" :class="{active: tab==='chat'}" @click="tab='chat'" aria-label="聊天" type="button">💬</button>
+        <button class="nav-item" :class="{active: tab==='contacts'}" @click="tab='contacts'" aria-label="联系人" type="button">👥</button>
+        <button class="nav-item" :class="{active: tab==='settings'}" @click="tab='settings'" aria-label="设置" type="button">⚙️</button>
       </div>
-      <div class="me" @click="logout" title="退出登录">{{ (store.user.nickname || '我').slice(0,1) }}</div>
+      <button class="me" @click="logout" aria-label="退出登录" type="button">{{ (store.user.nickname || '我').slice(0,1) }}</button>
     </div>
 
     <!-- 中间列 -->
     <div class="mid-panel">
       <!-- 顶部: 搜索 + tab切换 -->
       <div class="mid-header">
-        <input class="input search-input" v-model="searchKw" placeholder="搜索" @focus="searchFocus=true" @input="onSearch" />
-        <div class="search-result" v-if="searchFocus && searchKw">
+        <input class="input search-input" v-model="searchKw" placeholder="搜索" aria-label="搜索" @focus="searchFocus=true" @blur="onSearchBlur" @input="onSearch" />
+        <div class="search-result" v-if="searchKw">
           <div class="sr-title">联系人</div>
-          <div v-for="u in searchUsers" :key="u.user_id" class="sr-item" @click="startChat(u)">
+          <button v-for="u in searchUsers" :key="u.user_id" class="sr-item" @click="startChat(u)" type="button">
             <span class="sr-name">{{ u.nickname }}</span><span class="sr-acct">@{{ u.account }}</span>
-          </div>
+          </button>
           <div class="sr-title">消息</div>
-          <div v-for="m in searchMsgs" :key="m.message_id" class="sr-item" @click="jumpMessage(m)">
+          <button v-for="m in searchMsgs" :key="m.message_id" class="sr-item" @click="jumpMessage(m)" type="button">
             <span class="sr-name">{{ m.sender_nickname }}</span>
             <span class="sr-text">{{ m.content }}</span>
             <span class="sr-conv">{{ m.conversation_name }}</span>
-          </div>
+          </button>
           <div v-if="!searchUsers.length && !searchMsgs.length" class="empty">无结果</div>
-          <div class="sr-close" @click="searchFocus=false;searchKw=''">× 收起</div>
+          <button class="sr-close" @click="clearSearch" type="button">× 收起</button>
         </div>
         <div class="mid-tabs">
-          <span class="tab" :class="{active: convTab==='msg'}" @click="convTab='msg'">消息</span>
-          <span class="tab" :class="{active: convTab==='group'}" @click="convTab='group';loadGroups()">群聊</span>
+          <button class="tab" :class="{active: convTab==='msg'}" @click="convTab='msg'" type="button">消息</button>
+          <button class="tab" :class="{active: convTab==='group'}" @click="convTab='group';loadGroups()" type="button">群聊</button>
         </div>
       </div>
 
@@ -55,12 +55,16 @@
 
     <!-- 右侧内容 -->
     <div class="right-panel">
-      <ChatWindow v-if="store.currentConv" :store="store" :wsConnected="store.connected" />
-      <div v-else class="right-empty">
-        <div class="logo-big">简聊</div>
-        <p>选择一个会话开始聊天</p>
-      </div>
-      <SettingsPanel v-if="tab==='settings' && !store.currentConv" />
+      <!-- 设置页: 独立于会话状态, 始终可访问 -->
+      <SettingsPanel v-if="tab==='settings'" :store="store" />
+      <!-- 聊天页 -->
+      <template v-else>
+        <ChatWindow v-if="store.currentConv" :store="store" :wsConnected="store.connected" />
+        <div v-else class="right-empty">
+          <div class="logo-big">简聊</div>
+          <p>选择一个会话开始聊天</p>
+        </div>
+      </template>
     </div>
 
     <!-- 建群弹窗 -->
@@ -149,6 +153,7 @@ function markRead(conv) {
 }
 
 async function onSearch() {
+  searchFocus.value = true
   clearTimeout(searchTimer)
   searchTimer = setTimeout(async () => {
     if (!searchKw.value) { searchUsers.value = []; searchMsgs.value = []; return }
@@ -162,6 +167,18 @@ async function onSearch() {
   }, 400)
 }
 
+// 失焦后延迟收起, 给点击搜索结果留出时间(mousedown 优先已阻止默认转跳)
+function onSearchBlur() {
+  setTimeout(() => { searchFocus.value = false }, 120)
+}
+
+function clearSearch() {
+  searchFocus.value = false
+  searchKw.value = ''
+  searchUsers.value = []
+  searchMsgs.value = []
+}
+
 function jumpMessage(m) {
   // 定位到该消息所在会话
   const conv = store.conversations.find(c => c.conversation_id === m.conversation_id)
@@ -173,6 +190,7 @@ function jumpMessage(m) {
     }, 300)
   }
   searchFocus.value = false
+  clearSearch()
 }
 
 function onGroupCreated(g) {
@@ -193,10 +211,14 @@ function logout() {
   display:flex; flex-direction:column; align-items:center; padding:12px 0; }
 .nav-items { flex:1; display:flex; flex-direction:column; gap:8px; width:100%; align-items:center; }
 .nav-item { width:44px; height:44px; display:flex; align-items:center; justify-content:center;
-  font-size:22px; border-radius:10px; cursor:pointer; color:#666; }
+  font-size:22px; border-radius:10px; cursor:pointer; color:#666; border:none; background:transparent; }
+.nav-item:hover { background:#f0f4ff; color:var(--primary); }
+.nav-item:focus-visible { outline:2px solid var(--primary); outline-offset:-1px; }
 .nav-item.active { background:var(--primary); color:#fff; }
 .me { width:40px; height:40px; border-radius:50%; background:var(--primary); color:#fff;
-  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; }
+  display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; border:none; }
+.me:hover { opacity:.9; }
+.me:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
 .mid-panel { width:280px; background:#fff; border-right:1px solid var(--border); display:flex; flex-direction:column; }
 .mid-header { padding:12px; border-bottom:1px solid var(--border); position:relative; }
 .search-input { height:34px; }
@@ -204,15 +226,23 @@ function logout() {
   border:1px solid var(--border); border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.08);
   z-index:20; max-height:360px; overflow:auto; padding:8px; }
 .sr-title { font-size:12px; color:var(--text-2); margin:6px 4px; }
-.sr-item { display:flex; gap:8px; padding:8px; border-radius:6px; cursor:pointer; font-size:13px; }
+.sr-item { display:flex; gap:8px; padding:8px; border-radius:6px; cursor:pointer; font-size:13px;
+  width:100%; text-align:left; border:none; background:transparent; font:inherit; color:inherit; }
 .sr-item:hover { background:#f5f7fa; }
+.sr-item:focus-visible { outline:2px solid var(--primary); outline-offset:-1px; }
 .sr-name { color:var(--primary); font-weight:600; }
 .sr-acct { color:var(--text-2); }
 .sr-text { color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; }
 .sr-conv { margin-left:auto; color:var(--text-2); font-size:12px; }
-.sr-close { text-align:center; color:var(--primary); cursor:pointer; padding:6px; font-size:13px; }
+.sr-close { text-align:center; color:var(--primary); cursor:pointer; padding:6px; font-size:13px;
+  border:none; background:transparent; font:inherit; width:100%; }
+.sr-close:hover { background:#f0f4ff; border-radius:6px; }
+.sr-close:focus-visible { outline:2px solid var(--primary); outline-offset:-1px; }
 .mid-tabs { display:flex; gap:16px; margin-top:10px; }
-.tab { font-size:14px; color:var(--text-2); cursor:pointer; padding-bottom:4px; }
+.tab { font-size:14px; color:var(--text-2); cursor:pointer; padding-bottom:4px;
+  border:none; background:transparent; font:inherit; }
+.tab:hover { color:var(--primary); }
+.tab:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
 .tab.active { color:var(--primary); border-bottom:2px solid var(--primary); font-weight:600; }
 .mid-list { flex:1; overflow:auto; }
 .right-panel { flex:1; background:var(--bg); position:relative; overflow:hidden; }

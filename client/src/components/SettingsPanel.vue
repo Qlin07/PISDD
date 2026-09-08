@@ -4,18 +4,18 @@
 
     <div class="s-section">
       <div class="s-item">
-        <label>昵称</label>
-        <input class="input" v-model="form.nickname" />
+        <label for="nickname">昵称</label>
+        <input id="nickname" class="input" v-model="form.nickname" aria-label="昵称" />
       </div>
       <div class="s-item">
-        <label>个性签名</label>
-        <input class="input" v-model="form.signature" placeholder="最多50字符" />
+        <label for="signature">个性签名</label>
+        <input id="signature" class="input" v-model="form.signature" placeholder="最多50字符" aria-label="个性签名" spellcheck="false" />
       </div>
       <div class="s-item">
         <label>头像</label>
-        <label class="avatar-upload">
+        <label class="avatar-upload" aria-label="上传头像">
           <span class="avatar" :style="avatarStyle">{{ (form.nickname||'我').slice(0,1) }}</span>
-          <input type="file" accept="image/*" style="display:none" @change="uploadAvatar" />
+          <input type="file" accept="image/*" style="display:none" @change="uploadAvatar" aria-label="选择头像文件" />
           <span class="up-tip">点击上传</span>
         </label>
       </div>
@@ -24,9 +24,9 @@
 
     <div class="s-section">
       <div class="s-item">
-        <label>修改密码</label>
-        <input class="input" type="password" v-model="oldPwd" placeholder="原密码" />
-        <input class="input" type="password" v-model="newPwd" placeholder="新密码" style="margin-top:6px" />
+        <label for="oldPwd">修改密码</label>
+        <input id="oldPwd" class="input" type="password" v-model="oldPwd" placeholder="原密码" aria-label="原密码" autocomplete="current-password" />
+        <input id="newPwd" class="input" type="password" v-model="newPwd" placeholder="新密码" aria-label="新密码" autocomplete="new-password" style="margin-top:6px" />
         <button class="btn" @click="changePwd" style="margin-top:8px">修改密码</button>
       </div>
     </div>

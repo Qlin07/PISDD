@@ -53,9 +53,11 @@ npm run dev
 | 三层架构（client / server / database） | ✅ 已实现并分离 |
 | 数据层编排（MySQL + Redis + MinIO，Docker Compose） | ✅ 一键部署 |
 | 服务端（Go + Gin + GORM） | ✅ RESTful API + WebSocket 实时推送 |
-| 客户端（Vue3 + Vite + Pinia） | ✅ 登录/注册、主界面、三栏布局、聊天窗口 |
+| 客户端（Vue3 + Vite + Pinia） | ✅ 登录/注册、主界面、三栏布局、聊天窗口、设置面板 |
 | 认证 / 联系人 / 会话 / 消息 / 文件 / 搜索 | ✅ 已实现 |
 | 注册/登录/加好友/单聊/建群/群聊/文件/搜索 | ✅ 全链路运行时冒烟测试通过 |
+| 前端实时消息（发送回显 + 在线接收） | ✅ 统一消息源，即时显示、去重 |
+| 前端 Web 规范合规 | ✅ 语义化 button、表单 label、aria-label、焦点态、图片 alt |
 
 ## 测试
 

@@ -5,29 +5,29 @@
       <p class="sub">SimpleChat · 简洁纯净的实时沟通</p>
 
       <template v-if="mode === 'login'">
-        <input class="input" v-model="account" placeholder="账号" @keyup.enter="doLogin" />
-        <input class="input" type="password" v-model="password" placeholder="密码" @keyup.enter="doLogin" />
+        <input class="input" v-model="account" placeholder="账号" aria-label="账号" autocomplete="username" @keyup.enter="doLogin" />
+        <input class="input" type="password" v-model="password" placeholder="密码" aria-label="密码" autocomplete="current-password" @keyup.enter="doLogin" />
         <label class="remember">
           <input type="checkbox" v-model="remember" /> 记住我(30天)
         </label>
         <button class="btn btn-primary btn-block" @click="doLogin" :disabled="loading">
-          {{ loading ? '登录中...' : '登 录' }}
+          {{ loading ? '登录中…' : '登 录' }}
         </button>
         <div class="switch-links">
-          <a @click="mode='register'">注册账号</a>
-          <a>忘记密码(联系管理员重置)</a>
+          <a @click="mode='register'" role="button">注册账号</a>
+          <span>忘记密码(联系管理员重置)</span>
         </div>
       </template>
 
       <template v-else>
-        <input class="input" v-model="regAccount" placeholder="账号(字母+数字,3-32位)" />
-        <input class="input" v-model="regNickname" placeholder="昵称(默认同账号,2-20字符)" />
-        <input class="input" type="password" v-model="regPassword" placeholder="密码" />
+        <input class="input" v-model="regAccount" placeholder="账号(字母+数字,3-32位)" aria-label="账号" autocomplete="off" />
+        <input class="input" v-model="regNickname" placeholder="昵称(默认同账号,2-20字符)" aria-label="昵称" autocomplete="off" spellcheck="false" />
+        <input class="input" type="password" v-model="regPassword" placeholder="密码" aria-label="密码" autocomplete="new-password" />
         <button class="btn btn-primary btn-block" @click="doRegister" :disabled="loading">
-          {{ loading ? '注册中...' : '注 册' }}
+          {{ loading ? '注册中…' : '注 册' }}
         </button>
         <div class="switch-links">
-          <a @click="mode='login'">返回登录</a>
+          <a @click="mode='login'" role="button">返回登录</a>
         </div>
       </template>
 
