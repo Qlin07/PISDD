@@ -46,7 +46,8 @@
 ## 阶段 E：测试与收尾
 - [x] 任务 14：端到端联调与验证
   - [x] 全链路冒烟流程（注册→登录→加好友→单聊→建群→群聊→传文件→搜索）代码路径与 API/WS 契约就绪，服务端 `go build`/`go vet` 通过、客户端 `npm run build` 通过
-  - [ ] 运行时冒烟执行：需 Docker 环境拉起 MySQL/Redis/MinIO（当前沙箱无 Docker）。在本地执行 `cd database && docker-compose up -d` 后按根目录 README 启动 server 与 client 复验
+  - [x] 运行时冒烟执行：Docker 拉起 MySQL/Redis/MinIO 后，服务端连库启动，`server/scripts/smoke_test.py` 16/16 通过（含 WebSocket 实时单聊/群聊、已读回执、文件上传、消息搜索、置顶/免打扰）
+  - [x] 新增可复用的全链路回归脚本 `server/scripts/smoke_test.py`（零依赖）
 
 # Task Dependencies
 - 任务 5 依赖任务 4（需先有用户认证）

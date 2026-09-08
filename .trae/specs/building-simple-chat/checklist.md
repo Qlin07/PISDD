@@ -26,4 +26,4 @@
 
 ## 联调验证
 - [x] 冒烟流程代码路径就绪（注册→登录→加好友→单聊→建群→群聊→传文件→搜索 全链路 API/WS 已实现）
-- [ ] 运行时冒烟测试执行通过 —— ⚠️ 需 Docker 环境（MySQL/Redis/MinIO），当前沙箱无 Docker，待用户在本地 `docker-compose up -d` 后运行
+- [x] 运行时冒烟测试执行通过 —— 三件套(Docker)拉起后，服务端连库启动，`server/scripts/smoke_test.py` 16/16 通过（含 WebSocket 单聊/群聊实时送达、已读回执、文件上传、消息搜索、置顶/免打扰）
