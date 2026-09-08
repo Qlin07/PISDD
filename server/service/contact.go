@@ -32,6 +32,21 @@ func (s *ContactService) Search(keyword string, excludeUserID int64) ([]model.Us
 	return users, err
 }
 
+// GetByUID 按数字 UID(user_id)精确查询用户, 排除自己
+func (s *ContactService) GetByUID(uid, excludeUserID int64) (*model.User, error) {
+	if uid == 0 {
+		return nil, errors.New("UID 不合法")
+	}
+	if uid == excludeUserID {
+		return nil, errors.New("不能添加自己为好友")
+	}
+	var u model.User
+	if err := dao.DB.First(&u, "user_id = ?", uid).Error; err != nil {
+		return nil, errors.New("用户不存在")
+	}
+	return &u, nil
+}
+
 // SendApply 发起好友申请(双方相互建立申请记录)
 func (s *ContactService) SendApply(fromID, toID int64, remark *string) error {
 	if fromID == toID {

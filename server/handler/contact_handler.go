@@ -27,6 +27,21 @@ func (h *ContactHandler) Search(c *gin.Context) {
 	OK(c, friends)
 }
 
+// GetByUID 按数字 UID(user_id)精确查询用户
+func (h *ContactHandler) GetByUID(c *gin.Context) {
+	uidVal, err := strconv.ParseInt(c.Query("uid"), 10, 64)
+	if err != nil {
+		BadRequest(c, "UID 不合法")
+		return
+	}
+	user, err := h.contact.GetByUID(uidVal, uid(c))
+	if err != nil {
+		BadRequest(c, err.Error())
+		return
+	}
+	OK(c, user)
+}
+
 type applyReq struct {
 	ToID   int64   `json:"to_id"`
 	Remark *string `json:"remark"`

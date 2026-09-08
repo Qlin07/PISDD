@@ -40,6 +40,7 @@ func Setup(cfg *config.Config) *gin.Engine {
 
 		// 联系人
 		api.GET("/contacts/search", contact.Search)
+		api.GET("/contacts/uid", contact.GetByUID)
 		api.POST("/contacts/apply", contact.Apply)
 		api.POST("/contacts/accept", contact.Accept)
 		api.POST("/contacts/reject", contact.Reject)

@@ -15,11 +15,29 @@
       </div>
     </div>
 
-    <!-- 搜索添加 -->
-    <div class="add-bar">
-      <label for="contact-search" class="sr-only">搜索用户添加好友</label>
-      <input id="contact-search" class="input" v-model="kw" placeholder="搜索用户添加好友" @input="doSearch" />
-      <div v-if="kw" class="add-results">
+    <!-- 搜索添加(UID 或 昵称/账号) -->
+    <div class="search-bar">
+      <label for="contact-search" class="sr-only">输入 UID 或昵称/账号搜索用户</label>
+      <div class="search-row">
+        <input id="contact-search" class="input" v-model="kw" placeholder="输入 UID 或昵称/账号搜索"
+          aria-label="输入UID或昵称账号搜索" autocomplete="off" spellcheck="false"
+          @input="onInput" @keyup.enter="doSearch" />
+        <button class="mini ok" @click="doSearch" type="button">搜索</button>
+      </div>
+
+      <div v-if="kw && isUidKw" class="uid-result" v-show="uidResult || kw">
+        <template v-if="uidResult">
+          <span class="avatar" :style="uidAvatarStyle" aria-hidden="true">{{ (uidResult.nickname||'?').slice(0,1) }}</span>
+          <div class="u-info">
+            <div class="u-name">{{ uidResult.nickname }} <span class="u-id">UID {{ uidResult.user_id }}</span></div>
+          </div>
+          <button class="mini ok" @click="apply(uidResult.user_id)" type="button">添加</button>
+        </template>
+        <span v-else-if="uidMsg" class="uid-msg error">{{ uidMsg }}</span>
+        <span v-else class="uid-msg">查找中…</span>
+      </div>
+
+      <div v-else-if="kw && !isUidKw" class="add-results">
         <div v-for="u in results" :key="u.user_id" class="add-item">
           <span class="avatar" aria-hidden="true">{{ (u.nickname||'?').slice(0,1) }}</span>
           <div class="a-info">
@@ -27,6 +45,7 @@
           </div>
           <button class="mini ok" @click="apply(u.user_id)" type="button">添加</button>
         </div>
+        <p v-if="!results.length" class="empty">无匹配用户</p>
       </div>
     </div>
 
@@ -49,14 +68,59 @@ const emit = defineEmits(['chat', 'refresh'])
 
 const kw = ref('')
 const results = ref([])
+const uidResult = ref(null)
+const uidMsg = ref('')
+const uidError = ref(false)
+let typingTimer = null
 
 // friendship里是 id 列表(与 from_id/to_id) —— 由 Main 传入的是原始 friendship, 这里需转为用户
 const friendUsers = computed(() => props.friends)
 
-async function doSearch() {
-  if (!kw.value) { results.value = []; return }
+// 输入为纯数字 → 按 UID 精确查询; 否则 → 按昵称/账号模糊搜索
+const isUidKw = computed(() => /^\d+$/.test(String(kw.value || '').trim()))
+
+const uidAvatarStyle = computed(() => ({
+  background: uidResult.value && uidResult.value.avatar_url ? `url(${uidResult.value.avatar_url}) center/cover` : 'var(--primary)'
+}))
+
+// 输入实时搜索: 非数字关键词做 400ms 防抖; 数字 UID 等用户点「搜索」/回车
+function onInput() {
+  uidResult.value = null
+  uidMsg.value = ''
+  uidError.value = false
+  if (isUidKw.value) { results.value = [] }
+  else {
+    clearTimeout(typingTimer)
+    typingTimer = setTimeout(() => doSearch(), 400)
+  }
+}
+
+// 统一搜索入口: 纯数字走 UID, 否则昵称/账号
+function doSearch() {
+  const v = String(kw.value || '').trim()
+  if (!v) { results.value = []; uidResult.value = null; uidMsg.value = ''; return }
+  if (isUidKw.value) { queryByUid(v) }
+  else { queryByName(v) }
+}
+
+async function queryByUid(uidVal) {
+  uidResult.value = null
+  uidMsg.value = ''
+  uidError.value = false
   try {
-    const { data } = await api.get(`/contacts/search?keyword=${encodeURIComponent(kw.value)}`)
+    const { data } = await api.get(`/contacts/uid?uid=${uidVal}`)
+    uidResult.value = data
+  } catch (e) {
+    uidResult.value = null
+    uidMsg.value = e.message || '未找到该用户'
+    uidError.value = true
+  }
+}
+
+async function queryByName(name) {
+  if (!name) { results.value = []; return }
+  try {
+    const { data } = await api.get(`/contacts/search?keyword=${encodeURIComponent(name)}`)
     results.value = data || []
   } catch (e) { results.value = [] }
 }
@@ -80,7 +144,7 @@ function avatarStyle(url) { return { background: url ? `url(${url}) center/cover
 <style scoped>
 .contact-list { padding:12px; }
 .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; clip:rect(0,0,0,0); border:0; overflow:hidden; white-space:nowrap; }
-.pending { background:rgba(255,209,102,.08); border:1px solid rgba(255,209,102,.25); border-radius:10px; padding:10px; margin-bottom:12px; }
+.pending { background:var(--warning-soft); border:1px solid var(--warning-border); border-radius:10px; padding:10px; margin-bottom:12px; }
 .p-title,.f-title { font-size:13px; color:var(--text-2); margin:8px 4px; }
 .p-item,.add-item { display:flex; align-items:center; gap:8px; padding:6px; }
 .p-info { flex:1; }
@@ -91,11 +155,21 @@ function avatarStyle(url) { return { background: url ? `url(${url}) center/cover
 .mini.ok { background:var(--primary); color:var(--primary-ink); font-weight:600; }
 .mini.ok:hover { box-shadow:0 0 0 3px var(--primary-glow); }
 .mini.no { background:var(--surface-3); color:var(--text-2); }
-.mini.no:hover { background:#243048; }
+.mini.no:hover { background:var(--hover-bg); }
 .mini:focus-visible { outline:2px solid var(--primary); outline-offset:1px; }
-.add-bar { position:relative; margin-bottom:8px; }
-.add-results { position:absolute; top:42px; left:0; right:0; background:var(--surface-2); border:1px solid var(--border);
-  border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:20; padding:6px; }
+.search-bar { position:relative; margin-bottom:10px; }
+.search-row { display:flex; gap:8px; }
+.search-row .input { flex:1; min-width:0; }
+.search-row .mini { margin-left:0; white-space:nowrap; }
+.uid-msg { font-size:12px; margin-top:6px; color:var(--success); }
+.uid-msg.error { color:var(--danger); }
+.uid-result { display:flex; align-items:center; gap:10px; padding:8px; margin-top:8px;
+  background:var(--surface-2); border:1px solid var(--border); border-radius:10px; }
+.u-info { flex:1; min-width:0; }
+.u-name { font-size:14px; color:var(--text); }
+.u-id { color:var(--text-3); font-size:12px; margin-left:4px; }
+.add-results { display:flex; flex-direction:column; margin-top:8px; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:10px; padding:6px; }
 .add-item:hover { background:var(--surface-3); }
 .a-info { flex:1; }
 .a-name { font-size:14px; color:var(--text); }
