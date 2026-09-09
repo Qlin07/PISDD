@@ -3,23 +3,7 @@
     <div class="s-title">设置中心</div>
 
     <div class="s-section">
-      <div class="s-item">
-        <label for="nickname">昵称</label>
-        <input id="nickname" class="input" v-model="form.nickname" aria-label="昵称" />
-      </div>
-      <div class="s-item">
-        <label for="signature">个性签名</label>
-        <input id="signature" class="input" v-model="form.signature" placeholder="最多50字符" aria-label="个性签名" spellcheck="false" />
-      </div>
-      <div class="s-item">
-        <label>头像</label>
-        <label class="avatar-upload" aria-label="上传头像">
-          <span class="avatar" :style="avatarStyle">{{ form.avatar_url ? '' : (form.nickname||'我').slice(0,1) }}</span>
-          <input type="file" accept="image/*" style="display:none" @change="uploadAvatar" aria-label="选择头像文件" />
-          <span class="up-tip">点击上传</span>
-        </label>
-      </div>
-      <button class="btn btn-primary" @click="saveProfile">保存资料</button>
+      <button class="btn btn-danger logout-btn" @click="$emit('logout')" type="button">退出登录</button>
     </div>
 
     <div class="s-section">
@@ -57,53 +41,16 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref } from 'vue'
 import { api } from '../api/http'
 import { THEMES } from '../store'
 
 const props = defineProps({ store: Object })
 const store = props.store
 
-const form = reactive({
-  nickname: store.user?.nickname || '',
-  signature: store.user?.signature || '',
-  avatar_url: store.user?.avatar_url || ''
-})
 const oldPwd = ref('')
 const newPwd = ref('')
 
-const avatarStyle = computed(() => ({
-  // 保留底色做兜底(加载中/失败时显示主题色而非纯黑), 再叠加头像图片
-  background: form.avatar_url
-    ? `var(--primary) url(${form.avatar_url}) center/cover no-repeat`
-    : 'var(--primary)'
-}))
-
-async function uploadAvatar(e) {
-  const file = e.target.files[0]
-  if (!file) return
-  const fd = new FormData()
-  fd.append('image', file)
-  try {
-    const { data } = await api.post('/files/upload?type=image', fd)
-    form.avatar_url = data.file_url
-  } catch (err) { alert(err.message) }
-  e.target.value = ''
-}
-async function saveProfile() {
-  try {
-    await api.put('/user/profile', {
-      nickname: form.nickname,
-      signature: form.signature,
-      avatar_url: form.avatar_url
-    })
-    store.user.nickname = form.nickname
-    store.user.signature = form.signature
-    store.user.avatar_url = form.avatar_url
-    localStorage.setItem('user', JSON.stringify(store.user))
-    alert('保存成功')
-  } catch (err) { alert(err.message) }
-}
 async function changePwd() {
   if (!oldPwd.value || !newPwd.value) return alert('请填写密码')
   try {
@@ -123,10 +70,10 @@ async function changePwd() {
 .s-item label { font-size:14px; color:var(--text-2); min-width:70px; }
 .s-item .input { flex:1; }
 .s-item > span:last-child { color:var(--text); }
-.avatar { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--primary-dim)); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:600; box-shadow:0 2px 10px var(--primary-glow); }
-.avatar-upload { display:flex; align-items:center; gap:10px; cursor:pointer; }
-.up-tip { color:var(--primary); font-size:13px; }
+.logout-btn { width:100%; padding:10px; border-radius:10px; font-size:14px; font-weight:600;
+  background:var(--danger); color:#fff; transition: box-shadow .15s, filter .15s; }
+.logout-btn:hover { box-shadow:0 0 0 3px var(--danger-glow); filter:brightness(1.05); }
+.logout-btn:focus-visible { outline:2px solid var(--danger); outline-offset:2px; }
 .theme-picker { display:flex; gap:10px; flex-wrap:wrap; }
 .theme-opt { display:flex; align-items:center; gap:8px; padding:8px 14px; border:1px solid var(--border);
   border-radius:10px; background:var(--surface-2); cursor:pointer; color:var(--text-2); transition: border-color .18s, color .18s, box-shadow .18s; }

@@ -2,7 +2,7 @@
   <div class="main">
     <!-- 左侧导航(上三下一: 头像置顶, 聊天/联系人紧随, 设置置底) -->
     <div class="sidebar">
-      <button class="me" @click="logout" aria-label="退出登录" :style="meStyle" type="button">{{ store.user?.avatar_url ? '' : (store.user?.nickname || '我').slice(0,1) }}</button>
+      <button class="me" @click="showProfile=true" aria-label="我的资料" :style="meStyle" type="button">{{ store.user?.avatar_url ? '' : (store.user?.nickname || '我').slice(0,1) }}</button>
       <div class="nav-items">
         <button class="nav-item" :class="{active: tab==='chat'}" @click="tab='chat'" aria-label="聊天" type="button">💬</button>
         <button class="nav-item" :class="{active: tab==='contacts'}" @click="tab='contacts'" aria-label="联系人" type="button">👥</button>
@@ -56,7 +56,7 @@
     <!-- 右侧内容 -->
     <div class="right-panel">
       <!-- 设置页: 独立于会话状态, 始终可访问 -->
-      <SettingsPanel v-if="tab==='settings'" :store="store" />
+      <SettingsPanel v-if="tab==='settings'" :store="store" @logout="logout" />
       <!-- 聊天页 -->
       <template v-else>
         <ChatWindow v-if="store.currentConv" :store="store" :wsConnected="store.connected" />
@@ -69,6 +69,8 @@
 
     <!-- 建群弹窗 -->
     <CreateGroupModal v-if="showCreateGroup" :friends="store.contacts" @close="showCreateGroup=false" @created="onGroupCreated" />
+    <!-- 资料编辑弹窗 -->
+    <ProfileModal v-if="showProfile" :store="store" @close="showProfile=false" />
   </div>
 </template>
 
@@ -84,6 +86,7 @@ import ContactList from '../components/ContactList.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import SettingsPanel from '../components/SettingsPanel.vue'
 import CreateGroupModal from '../components/CreateGroupModal.vue'
+import ProfileModal from '../components/ProfileModal.vue'
 
 const store = useStore()
 const router = useRouter()
@@ -98,6 +101,7 @@ const meStyle = computed(() => ({
 const tab = ref('chat')
 const convTab = ref('msg')
 const showCreateGroup = ref(false)
+const showProfile = ref(false)
 const searchKw = ref('')
 const searchFocus = ref(false)
 const searchUsers = ref([])
