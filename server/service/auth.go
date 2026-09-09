@@ -63,7 +63,8 @@ func (s *AuthService) Register(account, nickname, password string) (*model.User,
 // Login 登录, remember=true 延长令牌30天
 func (s *AuthService) Login(account, password string, remember bool) (string, *model.User, error) {
 	var u model.User
-	err := dao.DB.Where("account = ?", account).First(&u).Error
+	// BINARY 实现账号严格大小写匹配(account 列为 utf8mb4_unicode_ci, 默认不区分大小写)
+	err := dao.DB.Where("BINARY account = ?", account).First(&u).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", nil, ErrUserNotFound
 	}
