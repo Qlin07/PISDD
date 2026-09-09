@@ -226,7 +226,8 @@ async function upload(url, file, field) {
   const fd = new FormData()
   fd.append(field, file)
   try {
-    const { data } = await api.post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+    // 不要手动指定 Content-Type: 手动设置会去掉 multipart 的 boundary, 导致后端无法解析
+    const { data } = await api.post(url, fd)
     return data
   } catch (err) {
     alert(err.message)

@@ -14,7 +14,7 @@
       <div class="s-item">
         <label>头像</label>
         <label class="avatar-upload" aria-label="上传头像">
-          <span class="avatar" :style="avatarStyle">{{ (form.nickname||'我').slice(0,1) }}</span>
+          <span class="avatar" :style="avatarStyle">{{ form.avatar_url ? '' : (form.nickname||'我').slice(0,1) }}</span>
           <input type="file" accept="image/*" style="display:none" @change="uploadAvatar" aria-label="选择头像文件" />
           <span class="up-tip">点击上传</span>
         </label>
@@ -73,7 +73,10 @@ const oldPwd = ref('')
 const newPwd = ref('')
 
 const avatarStyle = computed(() => ({
-  background: form.avatar_url ? `url(${form.avatar_url}) center/cover` : 'var(--primary)'
+  // 保留底色做兜底(加载中/失败时显示主题色而非纯黑), 再叠加头像图片
+  background: form.avatar_url
+    ? `var(--primary) url(${form.avatar_url}) center/cover no-repeat`
+    : 'var(--primary)'
 }))
 
 async function uploadAvatar(e) {

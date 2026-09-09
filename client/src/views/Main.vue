@@ -1,13 +1,13 @@
 <template>
   <div class="main">
-    <!-- 左侧导航 -->
+    <!-- 左侧导航(上三下一: 头像置顶, 聊天/联系人紧随, 设置置底) -->
     <div class="sidebar">
+      <button class="me" @click="logout" aria-label="退出登录" :style="meStyle" type="button">{{ store.user?.avatar_url ? '' : (store.user?.nickname || '我').slice(0,1) }}</button>
       <div class="nav-items">
         <button class="nav-item" :class="{active: tab==='chat'}" @click="tab='chat'" aria-label="聊天" type="button">💬</button>
         <button class="nav-item" :class="{active: tab==='contacts'}" @click="tab='contacts'" aria-label="联系人" type="button">👥</button>
-        <button class="nav-item" :class="{active: tab==='settings'}" @click="tab='settings'" aria-label="设置" type="button">⚙️</button>
       </div>
-      <button class="me" @click="logout" aria-label="退出登录" type="button">{{ (store.user?.nickname || '我').slice(0,1) }}</button>
+      <button class="nav-item" :class="{active: tab==='settings'}" @click="tab='settings'" aria-label="设置" type="button">⚙️</button>
     </div>
 
     <!-- 中间列 -->
@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from '../store'
 import { api } from '../api/http'
@@ -87,6 +87,13 @@ import CreateGroupModal from '../components/CreateGroupModal.vue'
 
 const store = useStore()
 const router = useRouter()
+
+// 侧边栏头像: 有头像图则显示图片(保留底色兜底), 否则显示渐变+首字母
+const meStyle = computed(() => ({
+  background: store.user?.avatar_url
+    ? `var(--primary) url(${store.user.avatar_url}) center/cover no-repeat`
+    : 'var(--primary)'
+}))
 
 const tab = ref('chat')
 const convTab = ref('msg')
@@ -221,7 +228,7 @@ function logout() {
 .main { display:flex; height:100vh; }
 .sidebar { width:64px; background:var(--surface); border-right:1px solid var(--border-soft);
   display:flex; flex-direction:column; align-items:center; padding:12px 0; }
-.nav-items { flex:1; display:flex; flex-direction:column; gap:10px; width:100%; align-items:center; }
+.nav-items { flex:1; display:flex; flex-direction:column; gap:10px; width:100%; align-items:center; justify-content:flex-start; padding-top:10px; }
 .nav-item { width:44px; height:44px; display:flex; align-items:center; justify-content:center;
   font-size:21px; border-radius:12px; cursor:pointer; color:var(--text-2); border:none; background:transparent; transition: color .18s, background .18s; }
 .nav-item:hover { background:var(--surface-3); color:var(--text); }
