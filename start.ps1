@@ -12,9 +12,9 @@
 #   Waits for services, then prints the frontend URL.
 #
 #  【用法 / Usage】PowerShell 中运行 (Run in PowerShell):
-#    正常启动 Start        : powershell -ExecutionPolicy Bypass -File start.ps1
-#    重启   Restart        : powershell -ExecutionPolicy Bypass -File start.ps1 -Restart
-#    停止   Stop           : powershell -ExecutionPolicy Bypass -File start.ps1 -Stop
+#    正常启动 Start   : powershell -ExecutionPolicy Bypass -File start.ps1
+#    重启   Restart   : powershell -ExecutionPolicy Bypass -File start.ps1 -Restart
+#    停止   Stop      : powershell -ExecutionPolicy Bypass -File start.ps1 -Stop
 #    或右键「使用 PowerShell 运行」
 #    Or right-click -> "Run with PowerShell".
 #
@@ -25,6 +25,7 @@
 #
 #  【注意事项 / Notes】
 #    - 后端与前端以最小化窗口在后台启动 (launched in minimized windows)
+#    - MySQL 使用宿主机端口 13306 (避开 Windows 端口排除范围占用 3306)
 #    - MinIO 控制台: http://localhost:9001  (账号 minioadmin / 密码 minioadmin123)
 # ============================================================
 
@@ -63,6 +64,18 @@ function Stop-All {
   }
 }
 
+# ---------- 检查 Docker Desktop 是否可用 ----------
+function Assert-DockerRunning {
+  docker info > $null 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Warn "Docker 不可用 (docker info 失败)."
+    Write-Host "  请先启动 Docker Desktop, 等待其就绪后再运行本脚本." -ForegroundColor Yellow
+    return $false
+  }
+  return $true
+}
+
 # ---------- Start data layer ----------
 function Start-Database {
   Write-Step "Starting data layer (MySQL + Redis + MinIO) via Docker Compose..."
@@ -70,9 +83,21 @@ function Start-Database {
     Write-Warn "docker-compose.yml not found in $DbDir"
     return
   }
+  if (-not (Assert-DockerRunning)) { return }
+
+  Write-Host "  docker compose up -d ..."
   Push-Location $DbDir
-  docker compose up -d 2>&1 | Out-Null
+  $composeOut = $(docker compose up -d 2>&1)
+  $upCode = $LASTEXITCODE
   Pop-Location
+  if ($upCode -ne 0) {
+    Write-Warn "docker compose 启动失败 (退出码 $upCode):"
+    $composeOut | ForEach-Object { "    $_" }
+    Write-Host "  常见原因: 端口被占用。若报 3306, 请在 database/docker-compose.yml 中改用 13306。" -ForegroundColor Yellow
+    return
+  }
+  # Docker 会把 "Running/Created" 等提示写到 stderr, 这里统一干净地展示
+  $composeOut | Where-Object { $_ -and $_.ToString().Trim() } | ForEach-Object { "    $_" }
   Write-Ok "Containers launched."
 
   # Wait for MySQL to become healthy (up to 60s)
@@ -80,11 +105,20 @@ function Start-Database {
   $ready = $false
   for ($i = 0; $i -lt 30; $i++) {
     Start-Sleep -Seconds 2
-    $state = (docker inspect --format '{{.State.Health.Status}}' simplechat-mysql 2>$null)
-    if ($state -eq "healthy") { $ready = $true; break }
+    $state = @(docker inspect --format '{{.State.Health.Status}}' simplechat-mysql 2>$null)
+    if ($state -and $state[0] -eq "healthy") { $ready = $true; break }
   }
-  if ($ready) { Write-Ok "MySQL healthy." }
-  else { Write-Warn "MySQL not healthy yet; backend may retry and recover." }
+  if ($ready) {
+    Write-Ok "MySQL healthy."
+  } else {
+    Write-Warn "MySQL 未能在 60s 内变为 healthy。以下是诊断信息:"
+    Push-Location $DbDir
+    docker compose ps
+    Write-Host "MySQL 最近日志 (tail):" -ForegroundColor Yellow
+    docker logs --tail 30 simplechat-mysql 2>&1
+    Pop-Location
+    Write-Host "  提示: MySQL 首次初始化需下载镜像并建表, 通常需要几十秒。" -ForegroundColor Yellow
+  }
 }
 
 # ---------- Start backend ----------

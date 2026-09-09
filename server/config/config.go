@@ -53,12 +53,12 @@ func Load() *Config {
 			WebOrigin:  env("WEB_ORIGIN", "http://localhost:5173"),
 		},
 		MySQL: MySQLConfig{
-			User:     env("MYSQL_USER", "simplechat"),
-			Password: env("MYSQL_PASSWORD", "simplechat123456"),
-			Host:     env("MYSQL_HOST", "127.0.0.1"),
-			Port:     env("MYSQL_PORT", "3306"),
-			DBName:   env("MYSQL_DB", "simplechat"),
-		},
+				User:     env("MYSQL_USER", "simplechat"),
+				Password: env("MYSQL_PASSWORD", "simplechat123456"),
+				Host:     env("MYSQL_HOST", "127.0.0.1"),
+				Port:     env("MYSQL_PORT", "13306"),
+				DBName:   env("MYSQL_DB", "simplechat"),
+			},
 		Redis: RedisConfig{
 			Addr:     env("REDIS_ADDR", "127.0.0.1:6379"),
 			Password: env("REDIS_PASSWORD", ""),

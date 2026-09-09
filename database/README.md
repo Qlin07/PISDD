@@ -13,9 +13,11 @@ docker-compose up -d
 
 | 服务 | 端口 | 账号 | 用途 |
 |------|------|------|------|
-| MySQL | 3306 | root / root123456（库：simplechat） | 主数据库 |
+| MySQL | 13306（容器内 3306） | root / root123456（库：simplechat） | 主数据库 |
 | Redis | 6379 | 无密码 | 缓存 / 会话状态 |
 | MinIO | 9000(API) / 9001(控制台) | minioadmin / minioadmin123 | 文件对象存储 |
+
+> 宿主机使用 `13306` 是为了避开 Windows 动态端口排除范围对 `3306` 的占用；容器内仍为 `3306`，服务端通过 `MYSQL_PORT=13306` 连接。
 
 > MySQL 首次启动会自动执行 `mysql/init/01_schema.sql` 建库建表（10 张核心表）。
 

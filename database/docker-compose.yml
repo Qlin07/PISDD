@@ -1,8 +1,6 @@
 # 简聊 SimpleChat 数据存储层环境编排
 # 启动：docker-compose up -d
 # 停止并清空数据：docker-compose down -v
-version: "3.8"
-
 services:
   mysql:
     image: mysql:8.0
@@ -15,7 +13,7 @@ services:
       MYSQL_PASSWORD: simplechat123456
       TZ: Asia/Shanghai
     ports:
-      - "3306:3306"
+      - "13306:3306"   # 宿主机用 13306 避开 Windows 端口排除范围; 容器内仍为 3306
     volumes:
       - ./mysql/init:/docker-entrypoint-initdb.d:ro
       - mysql_data:/var/lib/mysql
