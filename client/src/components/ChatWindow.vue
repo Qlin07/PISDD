@@ -11,9 +11,9 @@
         <button class="load-more" @click="loadMore" type="button">加载更早消息</button>
       </div>
       <div v-for="m in messages" :key="m.message_id" :id="'msg-'+m.message_id"
-        class="msg-row" :class="{mine: m.sender_id===store.user.user_id}">
+        class="msg-row" :class="{mine: m.sender_id===store.user?.user_id}">
         <div class="msg-bubble">
-          <div v-if="m.sender_id!==store.user.user_id" class="m-name">{{ m.sender_nickname || '用户' }}</div>
+          <div v-if="m.sender_id!==store.user?.user_id" class="m-name">{{ m.sender_nickname || '用户' }}</div>
           <template v-if="m.type===0">{{ m.content }}</template>
           <template v-else-if="m.type===1">
             <img class="msg-img" v-if="m.media_url" :src="m.media_url" :alt="m.content || '图片消息'" @click="previewImg(m.media_url)" />
@@ -26,7 +26,7 @@
           </template>
           <template v-else-if="m.type===4"><em class="sys">{{ m.content }}</em></template>
           <template v-else>{{ m.content }}</template>
-          <div class="m-status" v-if="m.sender_id===store.user.user_id">
+          <div class="m-status" v-if="m.sender_id===store.user?.user_id">
             {{ m.status===3?'已读':m.status===2?'已送达':m.status===1?'已发送':'发送中' }}
           </div>
         </div>

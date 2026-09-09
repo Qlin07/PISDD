@@ -74,7 +74,10 @@ const uidError = ref(false)
 let typingTimer = null
 
 // friendship里是 id 列表(与 from_id/to_id) —— 由 Main 传入的是原始 friendship, 这里需转为用户
-const friendUsers = computed(() => props.friends)
+// 空值兜底: 后端无好友时 friends/pending 可能为 null, 归一到 [] 避免渲染崩溃
+const friends = computed(() => props.friends || [])
+const pending = computed(() => props.pending || [])
+const friendUsers = computed(() => friends.value)
 
 // 输入为纯数字 → 按 UID 精确查询; 否则 → 按昵称/账号模糊搜索
 const isUidKw = computed(() => /^\d+$/.test(String(kw.value || '').trim()))

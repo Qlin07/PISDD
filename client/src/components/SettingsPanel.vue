@@ -46,8 +46,8 @@
     </div>
 
     <div class="s-section about">
-      <div class="s-item"><label>账号</label><span>{{ store.user.account }}</span></div>
-      <div class="s-item"><label>UID</label><span>{{ store.user.user_id }}</span></div>
+      <div class="s-item"><label>账号</label><span>{{ store.user?.account || '' }}</span></div>
+      <div class="s-item"><label>UID</label><span>{{ store.user?.user_id ?? '' }}</span></div>
       <div class="s-item"><label>连接状态</label>
         <span :class="{ok: store.connected}">{{ store.connected ? '● 已连接' : '○ 断开' }}</span>
       </div>

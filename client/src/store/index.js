@@ -12,6 +12,9 @@ const THEME_KEY = 'simplechat_theme'
 export { THEME_KEY }
 const DEFAULT_THEME = 'night'
 
+// loadProfile 的 in-flight 标记, 并发调用去重(仅保留一个在途请求)
+let loadProfilePromise = null
+
 // 将主题应用到根元素 data-theme, 驱动 style.css 的变量切换
 export function applyTheme(theme) {
   const root = document.documentElement
@@ -28,10 +31,23 @@ export function loadTheme() {
   return valid ? saved : DEFAULT_THEME
 }
 
+// 安全地从 localStorage 解析用户对象; 异常/非对象/缺 user_id 一律返回 null,
+// 避免页面上 store.user 为空对象或脏数据导致渲染崩溃。
+function parseStoredUser() {
+  const raw = localStorage.getItem('user')
+  if (!raw) return null
+  try {
+    const u = JSON.parse(raw)
+    return (u && typeof u === 'object' && typeof u.user_id !== 'undefined') ? u : null
+  } catch (e) {
+    return null
+  }
+}
+
 export const useStore = defineStore('app', {
   state: () => ({
     token: localStorage.getItem('token') || '',
-    user: JSON.parse(localStorage.getItem('user') || 'null'),
+    user: parseStoredUser(),
     conversations: [],
     contacts: [],
     groups: [],
@@ -45,21 +61,40 @@ export const useStore = defineStore('app', {
     isLogin: (s) => !!s.token
   },
   actions: {
+    // 校验登录/注册响应的用户结构, 缺失则抛错避免半登录态
+    applyAuth(_token, _user) {
+      if (!_user || typeof _user !== 'object' || typeof _user.user_id === 'undefined') {
+        throw new Error('登录/注册失败: 响应缺少有效的用户信息')
+      }
+      this.token = _token
+      this.user = _user
+      localStorage.setItem('token', _token)
+      localStorage.setItem('user', JSON.stringify(_user))
+    },
     async login(account, password, remember) {
       const { data } = await api.post('/auth/login', { account, password, remember })
-      this.token = data.token
-      this.user = data.user
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      this.applyAuth(data.token, data.user)
       this.connectWs()
     },
     async register(account, nickname, password) {
       const { data } = await api.post('/auth/register', { account, nickname, password })
-      this.token = data.token
-      this.user = data.user
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      this.applyAuth(data.token, data.user)
       this.connectWs()
+    },
+    // 会话恢复: 仅在已有 token 但本地 user 缺失/脏数据时, 从服务端拉取并补全
+    // 带 in-flight 去重, 并发调用只发一次请求
+    loadProfile() {
+      if (loadProfilePromise) return loadProfilePromise
+      loadProfilePromise = api.get('/user/profile')
+        .then(({ data }) => {
+          if (data && data.user_id) {
+            this.user = data
+            localStorage.setItem('user', JSON.stringify(data))
+          }
+          return data
+        })
+        .finally(() => { loadProfilePromise = null })
+      return loadProfilePromise
     },
     logout() {
       api.post('/auth/logout').catch(() => {})
@@ -103,11 +138,12 @@ export const useStore = defineStore('app', {
     },
     async refreshConversations() {
       const { data } = await api.get('/conversations')
-      this.conversations = data
+      this.conversations = data || []
     },
     async loadContacts() {
       const { data } = await api.get('/contacts')
-      this.contacts = data
+      // 无好友时后端可能返回 null, 归一到 [] 避免列表渲染崩溃
+      this.contacts = data || []
     },
     async loadGroups() {
       const { data } = await api.get('/groups/mine')

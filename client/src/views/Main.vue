@@ -7,7 +7,7 @@
         <button class="nav-item" :class="{active: tab==='contacts'}" @click="tab='contacts'" aria-label="联系人" type="button">👥</button>
         <button class="nav-item" :class="{active: tab==='settings'}" @click="tab='settings'" aria-label="设置" type="button">⚙️</button>
       </div>
-      <button class="me" @click="logout" aria-label="退出登录" type="button">{{ (store.user.nickname || '我').slice(0,1) }}</button>
+      <button class="me" @click="logout" aria-label="退出登录" type="button">{{ (store.user?.nickname || '我').slice(0,1) }}</button>
     </div>
 
     <!-- 中间列 -->
@@ -98,8 +98,20 @@ const searchMsgs = ref([])
 
 let searchTimer = null
 
-onMounted(() => { refreshAll() })
+onMounted(() => { ensureSession(); refreshAll() })
 watch(() => store.token, (v) => { if (v) refreshAll() })
+
+// 有 token 但本地 user 缺失/脏数据时, 从服务端恢复, 避免渲染崩溃
+async function ensureSession() {
+  if (store.token && !store.user) {
+    try {
+      await store.loadProfile()
+    } catch (e) {
+      store.logout()
+      router.push('/login')
+    }
+  }
+}
 
 function refreshAll() {
   store.refreshConversations().catch(() => {})
