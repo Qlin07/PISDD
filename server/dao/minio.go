@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -23,9 +24,14 @@ func InitMinio(cfg *config.MinioConfig) {
 		log.Fatalf("初始化MinIO失败: %v", err)
 	}
 	ctx := context.Background()
-	exists, err := client.BucketExists(ctx, cfg.Bucket)
-	if err != nil {
-		log.Fatalf("检查Bucket失败: %v", err)
+	// 等待MinIO就绪, 避免后端启动时对象存储未就绪导致退出
+	var exists bool
+	if err := waitReady(30*time.Second, func() error {
+		var e error
+		exists, e = client.BucketExists(ctx, cfg.Bucket)
+		return e
+	}); err != nil {
+		log.Fatalf("检查Bucket失败(等待就绪超时): %v", err)
 	}
 	if !exists {
 		if err := client.MakeBucket(ctx, cfg.Bucket, minio.MakeBucketOptions{}); err != nil {
